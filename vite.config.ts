@@ -1,7 +1,7 @@
 import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react'
-import { writeFile } from 'node:fs/promises'
-import { resolve } from 'node:path'
+import { writeFile, mkdir, rename, unlink } from 'node:fs/promises'
+import { resolve, dirname } from 'node:path'
 import type { IncomingMessage, ServerResponse } from 'node:http'
 
 const PASSWORD = 'pixel123'
@@ -22,7 +22,14 @@ function sendJSON(res: ServerResponse, data: object, status = 200) {
   res.end(JSON.stringify(data))
 }
 
-// Simple in-memory token store (single user)
+function checkAuth(tokens: Set<string>, body: Record<string, string>, res: ServerResponse): boolean {
+  if (!tokens.has(body.token || '')) {
+    sendJSON(res, { success: false, error: 'not authenticated' }, 403)
+    return false
+  }
+  return true
+}
+
 const tokens = new Set<string>()
 
 function generateToken(): string {
@@ -33,7 +40,6 @@ function editorPlugin(): any {
   return {
     name: 'editor-api',
     configureServer(server: any) {
-      // Login
       server.middlewares.use('/api/login', async (req: IncomingMessage, res: ServerResponse) => {
         if (req.method !== 'POST') return
         const body = await parseBody(req)
@@ -46,7 +52,6 @@ function editorPlugin(): any {
         }
       })
 
-      // Logout
       server.middlewares.use('/api/logout', async (req: IncomingMessage, res: ServerResponse) => {
         if (req.method !== 'POST') return
         const body = await parseBody(req)
@@ -54,17 +59,56 @@ function editorPlugin(): any {
         sendJSON(res, { success: true })
       })
 
-      // Save markdown file
       server.middlewares.use('/api/save', async (req: IncomingMessage, res: ServerResponse) => {
         if (req.method !== 'POST') return
         const body = await parseBody(req)
-        if (!tokens.has(body.token || '')) {
-          sendJSON(res, { success: false, error: 'not authenticated' }, 403)
-          return
-        }
+        if (!checkAuth(tokens, body, res)) return
         try {
           const filePath = resolve(process.cwd(), body.path)
+          await mkdir(dirname(filePath), { recursive: true })
           await writeFile(filePath, body.content, 'utf-8')
+          sendJSON(res, { success: true })
+        } catch (err) {
+          sendJSON(res, { success: false, error: String(err) }, 500)
+        }
+      })
+
+      server.middlewares.use('/api/create-page', async (req: IncomingMessage, res: ServerResponse) => {
+        if (req.method !== 'POST') return
+        const body = await parseBody(req)
+        if (!checkAuth(tokens, body, res)) return
+        try {
+          const filePath = resolve(process.cwd(), body.path)
+          await mkdir(dirname(filePath), { recursive: true })
+          await writeFile(filePath, body.content || '# New Page\n\n', 'utf-8')
+          sendJSON(res, { success: true })
+        } catch (err) {
+          sendJSON(res, { success: false, error: String(err) }, 500)
+        }
+      })
+
+      server.middlewares.use('/api/delete-page', async (req: IncomingMessage, res: ServerResponse) => {
+        if (req.method !== 'POST') return
+        const body = await parseBody(req)
+        if (!checkAuth(tokens, body, res)) return
+        try {
+          const filePath = resolve(process.cwd(), body.path)
+          await unlink(filePath)
+          sendJSON(res, { success: true })
+        } catch (err) {
+          sendJSON(res, { success: false, error: String(err) }, 500)
+        }
+      })
+
+      server.middlewares.use('/api/rename-page', async (req: IncomingMessage, res: ServerResponse) => {
+        if (req.method !== 'POST') return
+        const body = await parseBody(req)
+        if (!checkAuth(tokens, body, res)) return
+        try {
+          const oldPath = resolve(process.cwd(), body.oldPath)
+          const newPath = resolve(process.cwd(), body.newPath)
+          await mkdir(dirname(newPath), { recursive: true })
+          await rename(oldPath, newPath)
           sendJSON(res, { success: true })
         } catch (err) {
           sendJSON(res, { success: false, error: String(err) }, 500)
@@ -74,7 +118,6 @@ function editorPlugin(): any {
   }
 }
 
-// https://vite.dev/config/
 export default defineConfig({
   plugins: [react(), editorPlugin()],
 })

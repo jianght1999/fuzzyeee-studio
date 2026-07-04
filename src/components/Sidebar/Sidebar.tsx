@@ -12,6 +12,10 @@ interface SidebarProps {
   headingsByPage: { pageSlug: string; headings: HeadingItem[] }[];
   activeSlug?: string;
   onNavigate: (slug: string, headingId?: string) => void;
+  isLoggedIn?: boolean;
+  onAddPage?: (name: string) => void;
+  onDeletePage?: (slug: string) => void;
+  onRenamePage?: (oldSlug: string, newName: string) => void;
 }
 
 export default function Sidebar({
@@ -19,9 +23,15 @@ export default function Sidebar({
   headingsByPage,
   activeSlug,
   onNavigate,
+  isLoggedIn,
+  onAddPage,
+  onDeletePage,
+  onRenamePage,
 }: SidebarProps) {
   const [collapsedPages, setCollapsedPages] = useState<Set<string>>(new Set());
   const [mobileOpen, setMobileOpen] = useState(false);
+  const [renamingSlug, setRenamingSlug] = useState<string | null>(null);
+  const [renameValue, setRenameValue] = useState('');
 
   useEffect(() => {
     document.body.style.overflow = mobileOpen ? 'hidden' : '';
@@ -42,6 +52,33 @@ export default function Sidebar({
     setMobileOpen(false);
   };
 
+  const handleAdd = () => {
+    const name = window.prompt('new page name (without .md):');
+    if (name && name.trim()) {
+      onAddPage?.(name.trim());
+    }
+  };
+
+  const handleDelete = (slug: string, e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (window.confirm(`delete "${slug}.md"?`)) {
+      onDeletePage?.(slug);
+    }
+  };
+
+  const startRename = (slug: string, e: React.MouseEvent) => {
+    e.stopPropagation();
+    setRenamingSlug(slug);
+    setRenameValue(slug);
+  };
+
+  const submitRename = () => {
+    if (renamingSlug && renameValue.trim() && renameValue.trim() !== renamingSlug) {
+      onRenamePage?.(renamingSlug, renameValue.trim());
+    }
+    setRenamingSlug(null);
+  };
+
   const sidebarContent = (
     <>
       <div className={styles.list}>
@@ -53,22 +90,53 @@ export default function Sidebar({
 
           return (
             <div key={page.slug} className={styles.pageGroup}>
-              <button
-                className={`${styles.pageItem} ${isActive ? styles.pageItemActive : ''}`}
-                onClick={() => {
-                  if (hasHeadings) {
-                    toggleCollapse(page.slug);
-                  }
-                  handleNavigate(page.slug);
-                }}
-              >
-                <span className={styles.pageTitle}>{page.title}</span>
-                {hasHeadings && (
-                  <span className={`${styles.arrow} ${isCollapsed ? styles.arrowCollapsed : ''}`}>
-                    ▾
+              <div className={styles.pageRow}>
+                {renamingSlug === page.slug ? (
+                  <input
+                    className={styles.renameInput}
+                    value={renameValue}
+                    onChange={(e) => setRenameValue(e.target.value)}
+                    onBlur={submitRename}
+                    onKeyDown={(e) => { if (e.key === 'Enter') submitRename(); if (e.key === 'Escape') setRenamingSlug(null); }}
+                    autoFocus
+                    onClick={(e) => e.stopPropagation()}
+                  />
+                ) : (
+                  <button
+                    className={`${styles.pageItem} ${isActive ? styles.pageItemActive : ''}`}
+                    onClick={() => {
+                      if (hasHeadings) toggleCollapse(page.slug);
+                      handleNavigate(page.slug);
+                    }}
+                  >
+                    <span className={styles.pageTitle}>{page.title}</span>
+                    {hasHeadings && (
+                      <span className={`${styles.arrow} ${isCollapsed ? styles.arrowCollapsed : ''}`}>
+                        ▾
+                      </span>
+                    )}
+                  </button>
+                )}
+
+                {isLoggedIn && renamingSlug !== page.slug && (
+                  <span className={styles.actions}>
+                    <button
+                      className={styles.actionBtn}
+                      onClick={(e) => startRename(page.slug, e)}
+                      title="rename"
+                    >
+                      ✎
+                    </button>
+                    <button
+                      className={styles.actionBtn}
+                      onClick={(e) => handleDelete(page.slug, e)}
+                      title="delete"
+                    >
+                      ✕
+                    </button>
                   </span>
                 )}
-              </button>
+              </div>
 
               {hasHeadings && !isCollapsed && (
                 <div className={styles.headings}>
@@ -87,26 +155,29 @@ export default function Sidebar({
           );
         })}
       </div>
+
+      {isLoggedIn && (
+        <button className={styles.addBtn} onClick={handleAdd}>
+          ＋ new page
+        </button>
+      )}
     </>
   );
 
   return (
     <>
-      {/* 移动端汉堡按钮 */}
       <button
         className={styles.hamburger}
         onClick={() => setMobileOpen(true)}
         aria-label="打开目录"
       >
-        ☰ 目录
+        ☰
       </button>
 
-      {/* 桌面端固定侧边栏 */}
       <aside className={styles.desktopSidebar}>
         {sidebarContent}
       </aside>
 
-      {/* 移动端覆盖 */}
       {mobileOpen && (
         <>
           <div className={styles.overlay} onClick={() => setMobileOpen(false)} />

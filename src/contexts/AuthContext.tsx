@@ -6,6 +6,9 @@ interface AuthContextType {
   login: (password: string) => Promise<boolean>;
   logout: () => void;
   saveMarkdown: (filePath: string, content: string) => Promise<boolean>;
+  createPage: (filePath: string) => Promise<boolean>;
+  deletePage: (filePath: string) => Promise<boolean>;
+  renamePage: (oldPath: string, newPath: string) => Promise<boolean>;
 }
 
 const AuthContext = createContext<AuthContextType>({
@@ -14,6 +17,9 @@ const AuthContext = createContext<AuthContextType>({
   login: async () => false,
   logout: () => {},
   saveMarkdown: async () => false,
+  createPage: async () => false,
+  deletePage: async () => false,
+  renamePage: async () => false,
 });
 
 export function useAuth() {
@@ -58,13 +64,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     sessionStorage.removeItem(SESSION_KEY);
   }, [token]);
 
-  const saveMarkdown = useCallback(async (filePath: string, content: string): Promise<boolean> => {
+  const apiPost = useCallback(async (url: string, body: Record<string, string>): Promise<boolean> => {
     if (!token) return false;
     try {
-      const res = await fetch('/api/save', {
+      const res = await fetch(url, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ token, path: filePath, content }),
+        body: JSON.stringify({ token, ...body }),
       });
       const data = await res.json();
       return data.success;
@@ -73,8 +79,24 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   }, [token]);
 
+  const saveMarkdown = useCallback(async (filePath: string, content: string): Promise<boolean> => {
+    return apiPost('/api/save', { path: filePath, content });
+  }, [apiPost]);
+
+  const createPage = useCallback(async (filePath: string): Promise<boolean> => {
+    return apiPost('/api/create-page', { path: filePath, content: '# New Page\n\n' });
+  }, [apiPost]);
+
+  const deletePage = useCallback(async (filePath: string): Promise<boolean> => {
+    return apiPost('/api/delete-page', { path: filePath });
+  }, [apiPost]);
+
+  const renamePage = useCallback(async (oldPath: string, newPath: string): Promise<boolean> => {
+    return apiPost('/api/rename-page', { oldPath, newPath });
+  }, [apiPost]);
+
   return (
-    <AuthContext.Provider value={{ token, isLoggedIn: !!token, login, logout, saveMarkdown }}>
+    <AuthContext.Provider value={{ token, isLoggedIn: !!token, login, logout, saveMarkdown, createPage, deletePage, renamePage }}>
       {children}
     </AuthContext.Provider>
   );

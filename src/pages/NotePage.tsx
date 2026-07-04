@@ -9,15 +9,31 @@ import MarkdownEditor from '../components/MarkdownEditor/MarkdownEditor';
 import LoginModal from '../components/LoginModal/LoginModal';
 import styles from './NotePage.module.css';
 
+const FONT_OPTIONS = [
+  { label: 'Pixel', value: "'Zpix', 'Press Start 2P', monospace" },
+  { label: 'Mono', value: "'Fira Code', 'Courier New', monospace" },
+  { label: 'Serif', value: "Georgia, 'Times New Roman', serif" },
+  { label: 'Sans', value: "system-ui, sans-serif" },
+];
+
+const SIZE_OPTIONS = [
+  { label: '14px', value: '14px' },
+  { label: '16px', value: '16px' },
+  { label: '18px', value: '18px' },
+  { label: '20px', value: '20px' },
+  { label: '24px', value: '24px' },
+];
+
 export default function NotePage() {
   const { category } = useParams<{ category: string }>();
   const [activeSlug, setActiveSlug] = useState<string>('');
   const [editing, setEditing] = useState(false);
   const [showLogin, setShowLogin] = useState(false);
-  // Local cache of edited content for instant preview after save
   const [editedContent, setEditedContent] = useState<Record<string, string>>({});
+  const [viewFont, setViewFont] = useState(FONT_OPTIONS[0].value);
+  const [viewSize, setViewSize] = useState(SIZE_OPTIONS[2].value);
 
-  const { isLoggedIn, logout } = useAuth();
+  const { isLoggedIn, logout, createPage, deletePage, renamePage } = useAuth();
   const categoryInfo = categories.find(c => c.slug === category);
 
   const { pages, allHeadings } = useMarkdownPages(category || '');
@@ -39,7 +55,6 @@ export default function NotePage() {
   }, [sortedPages, activeSlug]);
 
   useEffect(() => {
-    // Reset edit state when switching pages
     setEditing(false);
   }, [activeSlug]);
 
@@ -48,12 +63,10 @@ export default function NotePage() {
     [sortedPages, activeSlug]
   );
 
-  // Use edited content if available, otherwise use original
   const displayContent = activePage
     ? (editedContent[activePage.slug] ?? activePage.content)
     : '';
 
-  // Derive file path from active page slug
   const filePath = activePage
     ? `src/content/${category}/${activePage.slug}.md`
     : '';
@@ -74,6 +87,32 @@ export default function NotePage() {
     setEditing(false);
   }, [activePage]);
 
+  // --- Sidebar CRUD ---
+  const handleAddPage = async (name: string) => {
+    const path = `src/content/${category}/${name}.md`;
+    const ok = await createPage(path);
+    if (ok) {
+      window.location.reload();
+    }
+  };
+
+  const handleDeletePage = async (slug: string) => {
+    const path = `src/content/${category}/${slug}.md`;
+    const ok = await deletePage(path);
+    if (ok) {
+      window.location.reload();
+    }
+  };
+
+  const handleRenamePage = async (oldSlug: string, newName: string) => {
+    const oldPath = `src/content/${category}/${oldSlug}.md`;
+    const newPath = `src/content/${category}/${newName}.md`;
+    const ok = await renamePage(oldPath, newPath);
+    if (ok) {
+      window.location.reload();
+    }
+  };
+
   if (!categoryInfo || !categoryInfo.isAvailable) {
     return (
       <div className={styles.page}>
@@ -88,7 +127,6 @@ export default function NotePage() {
 
   return (
     <div className={styles.page}>
-      {/* 顶部栏 */}
       <header className={styles.topBar}>
         <Link to="/" className={styles.backLink} title="返回首页">
           ◀
@@ -98,12 +136,16 @@ export default function NotePage() {
         </h1>
         <div className={styles.actions}>
           {isLoggedIn ? (
-            editing ? null : (
+            editing ? (
+              <button className="pixel-button" onClick={() => setEditing(false)}>
+                preview
+              </button>
+            ) : (
               <>
                 <button className="pixel-button" onClick={() => setEditing(true)}>
                   edit
                 </button>
-                <button className="pixel-button" onClick={logout} style={{ marginLeft: 8 }}>
+                <button className="pixel-button" onClick={logout}>
                   logout
                 </button>
               </>
@@ -122,9 +164,38 @@ export default function NotePage() {
           headingsByPage={allHeadings}
           activeSlug={activeSlug}
           onNavigate={handleNavigate}
+          isLoggedIn={isLoggedIn}
+          onAddPage={handleAddPage}
+          onDeletePage={handleDeletePage}
+          onRenamePage={handleRenamePage}
         />
 
-        <main className={styles.content}>
+        <main className={styles.content} style={{ fontFamily: viewFont, fontSize: viewSize }}>
+          {isLoggedIn && !editing && (
+            <div className={styles.viewToolbar}>
+              <select
+                className={styles.viewSelect}
+                value={viewFont}
+                onChange={(e) => setViewFont(e.target.value)}
+                title="font"
+              >
+                {FONT_OPTIONS.map(f => (
+                  <option key={f.label} value={f.value}>{f.label}</option>
+                ))}
+              </select>
+              <select
+                className={styles.viewSelect}
+                value={viewSize}
+                onChange={(e) => setViewSize(e.target.value)}
+                title="size"
+              >
+                {SIZE_OPTIONS.map(s => (
+                  <option key={s.label} value={s.value}>{s.label}</option>
+                ))}
+              </select>
+            </div>
+          )}
+
           {activePage ? (
             editing ? (
               <MarkdownEditor
