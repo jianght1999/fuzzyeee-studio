@@ -33,6 +33,7 @@ export default function NotePage() {
   const [editedContent, setEditedContent] = useState<Record<string, string>>({});
   const [viewFont, setViewFont] = useState(FONT_OPTIONS[0].value);
   const [viewSize, setViewSize] = useState(SIZE_OPTIONS[2].value);
+  const [orderOverrides, setOrderOverrides] = useState<Record<string, string[]>>({});
 
   const { isLoggedIn, logout, createPage, deletePage, saveMarkdown, token } = useAuth();
   const { theme, toggle: toggleTheme } = useTheme();
@@ -42,13 +43,23 @@ export default function NotePage() {
 
   const sortedPages = useMemo(() => {
     return [...pages].sort((a, b) => {
-      if (a.slug === 'intro') return -1;
-      if (b.slug === 'intro') return 1;
-      if (a.slug === 'placeholder') return 1;
-      if (b.slug === 'placeholder') return -1;
-      return a.slug.localeCompare(b.slug);
+      // First: root pages before children
+      if (!a.parentSlug && b.parentSlug) return -1;
+      if (a.parentSlug && !b.parentSlug) return 1;
+      // Same parent group
+      if (a.parentSlug === b.parentSlug) {
+        const dirKey = a.parentSlug ? `${category}/${a.parentSlug}` : category ?? '';
+        const order = orderOverrides[dirKey];
+        if (order) {
+          const an = a.slug.replace(/^.*\//, ''), bn = b.slug.replace(/^.*\//, '');
+          const ai = order.indexOf(an), bi = order.indexOf(bn);
+          if (ai !== -1 && bi !== -1) return ai - bi;
+        }
+      }
+      // Different parent groups: use hook's original order (stable sort)
+      return 0;
     });
-  }, [pages]);
+  }, [pages, orderOverrides, category]);
 
   useEffect(() => {
     if (sortedPages.length > 0 && !activeSlug) {
@@ -74,16 +85,16 @@ export default function NotePage() {
     : '';
 
   const handleReorder = async (slugs: string[], parentSlug: string | null) => {
+    const dirKey = parentSlug ? `${category}/${parentSlug}` : (category ?? '');
+    setOrderOverrides(prev => ({ ...prev, [dirKey]: slugs }));
     if (!token) return;
-    const dir = parentSlug ? `${category}/${parentSlug}` : category;
-    const orderPath = `src/content/${dir}/.order.json`;
+    const orderPath = `src/content/${dirKey}/.order.json`;
     try {
       await fetch('/api/save', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ token, path: orderPath, content: JSON.stringify(slugs, null, 2) }),
       });
-      window.location.reload();
     } catch { /* ignore */ }
   };
 
