@@ -138,12 +138,18 @@ export default function Sidebar({
       <div key={page.slug}>
         <div
           className={`${styles.pageRow} ${isChild ? styles.pageRowChild : ''} ${dragOver === page.slug ? styles.dragOver : ''}`}
-          draggable={isLoggedIn && !renaming}
-          onDragStart={e => handleDragStart(e, page.slug)}
           onDragOver={e => handleDragOver(e, page.slug)}
           onDragLeave={handleDragLeave}
           onDrop={e => handleDrop(e, page.slug, page.parentSlug)}
         >
+          {isLoggedIn && !renaming && (
+            <span
+              className={styles.dragHandle}
+              draggable
+              onDragStart={e => handleDragStart(e, page.slug)}
+              title="drag to reorder"
+            >⠿</span>
+          )}
           {renaming === page.slug ? (
             <>
               <input

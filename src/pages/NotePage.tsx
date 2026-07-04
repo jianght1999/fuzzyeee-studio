@@ -3,6 +3,7 @@ import { useState, useMemo, useEffect, useCallback } from 'react';
 import { categories } from '../data/categories';
 import { useMarkdownPages } from '../hooks/useMarkdownPages';
 import { useAuth } from '../contexts/AuthContext';
+import { useTheme } from '../contexts/ThemeContext';
 import Sidebar from '../components/Sidebar/Sidebar';
 import RichTextEditor from '../components/RichTextEditor/RichTextEditor';
 import HtmlRenderer from '../components/HtmlRenderer/HtmlRenderer';
@@ -34,6 +35,7 @@ export default function NotePage() {
   const [viewSize, setViewSize] = useState(SIZE_OPTIONS[2].value);
 
   const { isLoggedIn, logout, createPage, deletePage, saveMarkdown, token } = useAuth();
+  const { theme, toggle: toggleTheme } = useTheme();
   const categoryInfo = categories.find(c => c.slug === category);
 
   const { pages } = useMarkdownPages(category || '');
@@ -145,6 +147,9 @@ export default function NotePage() {
           {categoryInfo.title}
         </h1>
         <div className={styles.actions}>
+          <button className={styles.themeBtn} onClick={toggleTheme} title="toggle theme">
+            {theme === 'dark' ? '☀' : '☾'}
+          </button>
           {isLoggedIn ? (
             editing ? (
               <button className="pixel-button" onClick={() => setEditing(false)}>
