@@ -10,7 +10,6 @@ export default function HomePage() {
       <main className={styles.main}>
         <div className={styles.hero}>
           <h1 className={styles.title}> Pixel Notes</h1>
-          <p className={styles.subtitle}>我的学习笔记世界</p>
         </div>
         <CategoryGrid />
       </main>

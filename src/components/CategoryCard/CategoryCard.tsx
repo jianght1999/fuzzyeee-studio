@@ -39,7 +39,9 @@ export default function CategoryCard({ category }: CategoryCardProps) {
         )}
       </div>
       <h3 className={styles.title}>{category.title}</h3>
-      <p className={styles.description}>{category.description}</p>
+      {category.description && (
+        <p className={styles.description}>{category.description}</p>
+      )}
     </div>
   );
 }
