@@ -1,0 +1,50 @@
+.renderer {
+  font-family: var(--font-pixel);
+  font-size: 16px;
+  line-height: 1.8;
+  color: var(--color-text);
+  max-width: 720px;
+}
+
+.renderer h1 {
+  font-size: 24px;
+  color: var(--color-highlight);
+  margin: 32px 0 16px;
+  padding-bottom: 8px;
+  border-bottom: 4px solid var(--color-border);
+}
+
+.renderer h2 {
+  font-size: 20px;
+  color: var(--color-highlight);
+  margin: 28px 0 12px;
+}
+
+.renderer h3 {
+  font-size: 18px;
+  color: var(--color-highlight-alt);
+  margin: 24px 0 10px;
+}
+
+.renderer p {
+  margin: 12px 0;
+}
+
+.renderer ul, .renderer ol {
+  margin: 12px 0;
+  padding-left: 24px;
+}
+
+.renderer li {
+  margin: 6px 0;
+}
+
+.renderer img {
+  max-width: 100%;
+  image-rendering: pixelated;
+  image-rendering: crisp-edges;
+}
+
+.renderer strong {
+  color: var(--color-highlight);
+}
