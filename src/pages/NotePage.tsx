@@ -10,28 +10,12 @@ import HtmlRenderer from '../components/HtmlRenderer/HtmlRenderer';
 import LoginModal from '../components/LoginModal/LoginModal';
 import styles from './NotePage.module.css';
 
-const FONT_OPTIONS = [
-  { label: 'Pixel', value: "'Fusion Pixel', 'Press Start 2P', monospace" },
-  { label: 'Mono', value: "'Fira Code', 'Courier New', monospace" },
-  { label: 'Serif', value: "Georgia, 'Times New Roman', serif" },
-  { label: 'Sans', value: "system-ui, sans-serif" },
-];
-
-const SIZE_OPTIONS = [
-  { label: '10px', value: '10px' },
-  { label: '20px', value: '20px' },
-  { label: '30px', value: '30px' },
-  { label: '40px', value: '40px' },
-];
-
 export default function NotePage() {
   const { category } = useParams<{ category: string }>();
   const [activeSlug, setActiveSlug] = useState<string>('');
   const [editing, setEditing] = useState(false);
   const [showLogin, setShowLogin] = useState(false);
   const [editedContent, setEditedContent] = useState<Record<string, string>>({});
-  const [viewFont, setViewFont] = useState(FONT_OPTIONS[0].value);
-  const [viewSize, setViewSize] = useState(SIZE_OPTIONS[1].value); // 20px default
   const [orderOverrides, setOrderOverrides] = useState<Record<string, string[]>>({});
 
   const { isLoggedIn, logout, createPage, deletePage, saveMarkdown, token } = useAuth();
@@ -196,31 +180,6 @@ export default function NotePage() {
         />
 
         <main className={styles.content}>
-          {isLoggedIn && !editing && (
-            <div className={styles.viewToolbar}>
-              <select
-                className={styles.viewSelect}
-                value={viewFont}
-                onChange={(e) => setViewFont(e.target.value)}
-                title="font"
-              >
-                {FONT_OPTIONS.map(f => (
-                  <option key={f.label} value={f.value}>{f.label}</option>
-                ))}
-              </select>
-              <select
-                className={styles.viewSelect}
-                value={viewSize}
-                onChange={(e) => setViewSize(e.target.value)}
-                title="size"
-              >
-                {SIZE_OPTIONS.map(s => (
-                  <option key={s.label} value={s.value}>{s.label}</option>
-                ))}
-              </select>
-            </div>
-          )}
-
           {activePage ? (
             editing ? (
               <RichTextEditor
@@ -230,7 +189,7 @@ export default function NotePage() {
                 onCancel={() => setEditing(false)}
               />
             ) : (
-              <HtmlRenderer content={displayContent} viewFont={viewFont} viewSize={viewSize} />
+              <HtmlRenderer content={displayContent} />
             )
           ) : (
             <p className={styles.emptyHint}>请从左侧目录选择一篇笔记</p>

@@ -5,8 +5,6 @@ import styles from './RichTextEditor.module.css';
 const FONTS = [
   { label: 'Pixel', value: "'Fusion Pixel', 'Press Start 2P', monospace" },
   { label: 'Mono', value: "'Fira Code', 'Courier New', monospace" },
-  { label: 'Serif', value: "Georgia, 'Times New Roman', serif" },
-  { label: 'Sans', value: "system-ui, sans-serif" },
 ];
 
 const SIZES = ['10px', '20px', '30px', '40px'];

@@ -70,31 +70,6 @@
   overflow-y: auto;
 }
 
-.viewToolbar {
-  display: flex;
-  gap: 8px;
-  margin-bottom: 16px;
-  padding-bottom: 12px;
-  border-bottom: 2px dashed var(--color-border);
-}
-
-.viewSelect {
-  font-family: var(--font-pixel);
-  font-size: 11px;
-  padding: 4px 8px;
-  border: 2px solid var(--color-border);
-  background: var(--color-card-bg);
-  color: var(--color-text-dim);
-  cursor: pointer;
-  outline: none;
-  appearance: none;
-  -webkit-appearance: none;
-}
-
-.viewSelect:focus {
-  border-color: var(--color-highlight);
-}
-
 .emptyHint {
   font-family: var(--font-pixel);
   font-size: 14px;
