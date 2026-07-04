@@ -1,0 +1,51 @@
+.card {
+  width: 100%;
+  aspect-ratio: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  padding: 20px;
+  cursor: pointer;
+  transition: none;
+  min-width: 200px;
+}
+
+.imageWrapper {
+  width: 80px;
+  height: 80px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  image-rendering: pixelated;
+  image-rendering: crisp-edges;
+}
+
+.image {
+  width: 80px;
+  height: 80px;
+  image-rendering: pixelated;
+  image-rendering: crisp-edges;
+}
+
+.placeholderEmoji {
+  font-size: 48px;
+  image-rendering: pixelated;
+}
+
+.title {
+  font-family: var(--font-pixel);
+  font-size: 16px;
+  color: var(--color-highlight);
+  text-align: center;
+  margin: 0;
+}
+
+.description {
+  font-family: var(--font-pixel);
+  font-size: 11px;
+  color: var(--color-text-dim);
+  text-align: center;
+  line-height: 1.6;
+}
