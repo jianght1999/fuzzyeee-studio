@@ -3,23 +3,19 @@ import { useState, useMemo, useEffect, useCallback } from 'react';
 import { categories } from '../data/categories';
 import { useMarkdownPages } from '../hooks/useMarkdownPages';
 import { useAuth } from '../contexts/AuthContext';
-import { useTheme } from '../contexts/ThemeContext';
 import Sidebar from '../components/Sidebar/Sidebar';
 import RichTextEditor from '../components/RichTextEditor/RichTextEditor';
 import HtmlRenderer from '../components/HtmlRenderer/HtmlRenderer';
-import LoginModal from '../components/LoginModal/LoginModal';
 import styles from './NotePage.module.css';
 
 export default function NotePage() {
   const { category } = useParams<{ category: string }>();
   const [activeSlug, setActiveSlug] = useState<string>('');
   const [editing, setEditing] = useState(false);
-  const [showLogin, setShowLogin] = useState(false);
   const [editedContent, setEditedContent] = useState<Record<string, string>>({});
   const [orderOverrides, setOrderOverrides] = useState<Record<string, string[]>>({});
 
-  const { isLoggedIn, logout, createPage, deletePage, saveMarkdown, token } = useAuth();
-  const { theme, toggle: toggleTheme } = useTheme();
+  const { isLoggedIn, createPage, deletePage, saveMarkdown, token } = useAuth();
   const categoryInfo = categories.find(c => c.slug === category);
 
   const { pages } = useMarkdownPages(category || '');
@@ -141,28 +137,16 @@ export default function NotePage() {
           {categoryInfo.title}
         </h1>
         <div className={styles.actions}>
-          <button className={styles.themeBtn} onClick={toggleTheme} title="toggle theme">
-            {theme === 'dark' ? '☀' : '☾'}
-          </button>
-          {isLoggedIn ? (
+          {isLoggedIn && (
             editing ? (
               <button className="pixel-button" onClick={() => setEditing(false)}>
                 preview
               </button>
             ) : (
-              <>
-                <button className="pixel-button" onClick={() => setEditing(true)}>
-                  edit
-                </button>
-                <button className="pixel-button" onClick={logout}>
-                  logout
-                </button>
-              </>
+              <button className="pixel-button" onClick={() => setEditing(true)}>
+                edit
+              </button>
             )
-          ) : (
-            <button className="pixel-button" onClick={() => setShowLogin(true)}>
-              login
-            </button>
           )}
         </div>
       </header>
@@ -196,8 +180,6 @@ export default function NotePage() {
           )}
         </main>
       </div>
-
-      {showLogin && <LoginModal onClose={() => setShowLogin(false)} />}
     </div>
   );
 }
