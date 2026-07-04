@@ -1,6 +1,6 @@
 import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react'
-import { writeFile, mkdir, rename, unlink } from 'node:fs/promises'
+import { writeFile, mkdir, unlink } from 'node:fs/promises'
 import { resolve, dirname } from 'node:path'
 import type { IncomingMessage, ServerResponse } from 'node:http'
 
@@ -100,20 +100,6 @@ function editorPlugin(): any {
         }
       })
 
-      server.middlewares.use('/api/rename-page', async (req: IncomingMessage, res: ServerResponse) => {
-        if (req.method !== 'POST') return
-        const body = await parseBody(req)
-        if (!checkAuth(tokens, body, res)) return
-        try {
-          const oldPath = resolve(process.cwd(), body.oldPath)
-          const newPath = resolve(process.cwd(), body.newPath)
-          await mkdir(dirname(newPath), { recursive: true })
-          await rename(oldPath, newPath)
-          sendJSON(res, { success: true })
-        } catch (err) {
-          sendJSON(res, { success: false, error: String(err) }, 500)
-        }
-      })
     },
   }
 }

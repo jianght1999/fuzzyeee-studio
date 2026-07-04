@@ -35,28 +35,3 @@
   border-color: var(--color-highlight);
   color: var(--color-highlight);
 }
-
-.navLink {
-  font-family: var(--font-pixel);
-  font-size: 14px;
-  color: var(--color-text);
-  text-decoration: none;
-  padding: 6px 12px;
-  border: 2px solid transparent;
-  background: none;
-}
-
-.navLink:hover {
-  border-color: var(--color-highlight);
-  color: var(--color-highlight);
-}
-
-.active {
-  border-color: var(--color-highlight);
-  color: var(--color-highlight);
-}
-
-.sprite {
-  font-size: 24px;
-  image-rendering: pixelated;
-}

@@ -93,11 +93,6 @@ export default function Sidebar({
     const isExpanded = expanded.has(page.slug);
     const isActive = page.slug === activeSlug;
 
-    if (isChild && isExpanded) {
-      // Auto-activate first child if none selected
-      // (no side effects in render)
-    }
-
     return (
       <div key={page.slug}>
         <div
