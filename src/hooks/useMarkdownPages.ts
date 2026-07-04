@@ -14,7 +14,8 @@ interface HeadingItem {
 }
 
 // Use Vite's import.meta.glob to load all .md files at build time
-const modules = import.meta.glob<{ default: string }>(
+// import: 'default' means each value is the raw string directly
+const modules = import.meta.glob<string>(
   '../content/**/*.md',
   { eager: true, query: '?raw', import: 'default' }
 );
@@ -45,7 +46,7 @@ export function useMarkdownPages(category: string) {
     for (const [path, mod] of Object.entries(modules)) {
       if (path.startsWith(prefix)) {
         const slug = path.replace(prefix, '').replace('.md', '');
-        const content = (mod as { default: string }).default;
+        const content = mod;
         result.push({
           slug,
           title: extractTitle(content),
