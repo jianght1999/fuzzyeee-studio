@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import type { Page } from '../../hooks/useMarkdownPages';
 import styles from './Sidebar.module.css';
 
@@ -28,6 +28,7 @@ export default function Sidebar({
   const [renaming, setRenaming] = useState<string | null>(null);
   const [renameValue, setRenameValue] = useState('');
   const [dragOver, setDragOver] = useState<string | null>(null);
+  const justDragged = useRef(false);
 
   // Auto-expand parent after adding sub-page
   useEffect(() => {
@@ -118,6 +119,7 @@ export default function Sidebar({
             slugs.splice(fi, 1); slugs.splice(ti, 0, dn);
             onReorder?.(slugs, page.parentSlug);
           }}
+          onDragEnd={() => { justDragged.current = true; setTimeout(() => { justDragged.current = false; }, 200); }}
         >
           {renaming === page.slug ? (
             <>
@@ -138,6 +140,7 @@ export default function Sidebar({
                 className={`${styles.pageItem} ${isActive ? styles.pageItemActive : ''}`}
                 draggable="false"
                 onClick={() => {
+                  if (justDragged.current) { justDragged.current = false; return; }
                   handleNavigate(page.slug);
                   if (hasKids) toggleExpand(page.slug);
                 }}
