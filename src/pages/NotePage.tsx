@@ -33,7 +33,7 @@ export default function NotePage() {
   const [viewFont, setViewFont] = useState(FONT_OPTIONS[0].value);
   const [viewSize, setViewSize] = useState(SIZE_OPTIONS[2].value);
 
-  const { isLoggedIn, logout, createPage, deletePage, renamePage } = useAuth();
+  const { isLoggedIn, logout, createPage, deletePage, saveMarkdown } = useAuth();
   const categoryInfo = categories.find(c => c.slug === category);
 
   const { pages, allHeadings } = useMarkdownPages(category || '');
@@ -105,10 +105,15 @@ export default function NotePage() {
   };
 
   const handleRenamePage = async (oldSlug: string, newName: string) => {
-    const oldPath = `src/content/${category}/${oldSlug}.md`;
-    const newPath = `src/content/${category}/${newName}.md`;
-    const ok = await renamePage(oldPath, newPath);
+    // Edit the # Title inside the markdown file, keep filename unchanged
+    const page = sortedPages.find(p => p.slug === oldSlug);
+    if (!page) return;
+    const oldContent = editedContent[oldSlug] ?? page.content;
+    const newContent = oldContent.replace(/^#\s+.+$/m, `# ${newName}`);
+    const filePath = `src/content/${category}/${oldSlug}.md`;
+    const ok = await saveMarkdown(filePath, newContent);
     if (ok) {
+      setEditedContent(prev => ({ ...prev, [oldSlug]: newContent }));
       window.location.reload();
     }
   };
@@ -170,7 +175,7 @@ export default function NotePage() {
           onRenamePage={handleRenamePage}
         />
 
-        <main className={styles.content} style={{ fontFamily: viewFont, fontSize: viewSize }}>
+        <main className={styles.content}>
           {isLoggedIn && !editing && (
             <div className={styles.viewToolbar}>
               <select
@@ -205,7 +210,7 @@ export default function NotePage() {
                 onCancel={() => setEditing(false)}
               />
             ) : (
-              <MarkdownRenderer content={displayContent} />
+              <MarkdownRenderer content={displayContent} viewFont={viewFont} viewSize={viewSize} />
             )
           ) : (
             <p className={styles.emptyHint}>请从左侧目录选择一篇笔记</p>

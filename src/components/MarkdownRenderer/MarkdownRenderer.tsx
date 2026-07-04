@@ -6,6 +6,8 @@ import styles from './MarkdownRenderer.module.css';
 
 interface MarkdownRendererProps {
   content: string;
+  viewFont?: string;
+  viewSize?: string;
 }
 
 // 自定义组件映射 — 处理 <Fretboard caged="C" /> 等特殊标签
@@ -99,14 +101,19 @@ function renderPart(part: RenderPart, key: number): React.ReactNode {
   return null;
 }
 
-export default function MarkdownRenderer({ content }: MarkdownRendererProps) {
+export default function MarkdownRenderer({ content, viewFont, viewSize }: MarkdownRendererProps) {
   const { cleanedContent, placeholders } = useMemo(
     () => parseCustomComponents(content),
     [content]
   );
 
+  const customStyle = {
+    ...(viewFont ? { '--view-font': viewFont } as React.CSSProperties : {}),
+    ...(viewSize ? { '--view-size': viewSize } as React.CSSProperties : {}),
+  };
+
   return (
-    <div className={styles.renderer}>
+    <div className={styles.renderer} style={customStyle}>
       <ReactMarkdown
         remarkPlugins={[remarkGfm]}
         components={{

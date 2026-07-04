@@ -1,13 +1,14 @@
 .renderer {
-  font-family: var(--font-pixel);
-  font-size: 16px;
+  font-family: var(--view-font, var(--font-pixel));
+  font-size: var(--view-size, 16px);
   line-height: 1.8;
   color: var(--color-text);
   max-width: 720px;
 }
 
 .renderer h1 {
-  font-size: 24px;
+  font-family: var(--view-font, var(--font-pixel));
+  font-size: calc(var(--view-size, 16px) * 1.5);
   color: var(--color-highlight);
   margin: 32px 0 16px;
   padding-bottom: 8px;
@@ -15,13 +16,15 @@
 }
 
 .renderer h2 {
-  font-size: 20px;
+  font-family: var(--view-font, var(--font-pixel));
+  font-size: calc(var(--view-size, 16px) * 1.25);
   color: var(--color-highlight);
   margin: 28px 0 12px;
 }
 
 .renderer h3 {
-  font-size: 18px;
+  font-family: var(--view-font, var(--font-pixel));
+  font-size: calc(var(--view-size, 16px) * 1.125);
   color: var(--color-highlight-alt);
   margin: 24px 0 10px;
 }
