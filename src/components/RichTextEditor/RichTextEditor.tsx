@@ -3,7 +3,7 @@ import { useAuth } from '../../contexts/AuthContext';
 import styles from './RichTextEditor.module.css';
 
 const FONTS = [
-  { label: 'WenKai', value: "'LXGW WenKai', 'Press Start 2P', monospace" },
+  { label: 'Pixel', value: "'Fusion Pixel', 'Press Start 2P', monospace" },
   { label: 'Mono', value: "'Fira Code', 'Courier New', monospace" },
   { label: 'Serif', value: "Georgia, 'Times New Roman', serif" },
   { label: 'Sans', value: "system-ui, sans-serif" },

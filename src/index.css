@@ -3,8 +3,18 @@
 /* --- 字体引入 --- */
 @import url('https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap');
 
-/* 霞鹜文楷 - 手写风格中文字体，jsDelivr CDN */
-@import url('https://cdn.jsdelivr.net/npm/lxgw-wenkai-webfont@1.7.0/style.css');
+/* 缝合怪像素字体 - 10px 等宽，本地托管 */
+@font-face {
+  font-family: 'Fusion Pixel';
+  src: url('/fonts/fusion-pixel-10px-monospaced-zh_hans.ttf.woff') format('woff');
+  font-display: swap;
+}
+@font-face {
+  font-family: 'Fusion Pixel';
+  src: url('/fonts/fusion-pixel-10px-monospaced-latin.ttf.woff') format('woff');
+  font-display: swap;
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
 
 /* --- CSS 变量 --- */
 :root {
@@ -20,7 +30,7 @@
   --color-link: #b8a88a;
 
   /* 字体 */
-  --font-pixel: 'LXGW WenKai', 'Press Start 2P', monospace;
+  --font-pixel: 'Fusion Pixel', 'Press Start 2P', monospace;
   --font-code: 'Fira Code', 'Courier New', monospace;
 
   /* 间距 */
@@ -63,7 +73,9 @@
 }
 
 html {
-  font-size: 16px;
+  font-size: 20px;
+  -webkit-font-smoothing: none;
+  -moz-osx-font-smoothing: unset;
 }
 
 body {
