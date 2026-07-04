@@ -1,0 +1,29 @@
+.editor {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+}
+
+.toolbar {
+  display: flex;
+  gap: 12px;
+  margin-bottom: 16px;
+}
+
+.textarea {
+  flex: 1;
+  font-family: 'Fira Code', 'Courier New', monospace;
+  font-size: 14px;
+  line-height: 1.7;
+  padding: 16px;
+  border: 3px solid var(--color-border);
+  background: #0a0a14;
+  color: var(--color-text);
+  resize: none;
+  outline: none;
+  min-height: 500px;
+}
+
+.textarea:focus {
+  border-color: var(--color-highlight);
+}

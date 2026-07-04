@@ -1,15 +1,23 @@
 import { useParams, Link } from 'react-router-dom';
-import { useState, useMemo, useEffect } from 'react';
+import { useState, useMemo, useEffect, useCallback } from 'react';
 import { categories } from '../data/categories';
 import { useMarkdownPages } from '../hooks/useMarkdownPages';
+import { useAuth } from '../contexts/AuthContext';
 import Sidebar from '../components/Sidebar/Sidebar';
 import MarkdownRenderer from '../components/MarkdownRenderer/MarkdownRenderer';
+import MarkdownEditor from '../components/MarkdownEditor/MarkdownEditor';
+import LoginModal from '../components/LoginModal/LoginModal';
 import styles from './NotePage.module.css';
 
 export default function NotePage() {
   const { category } = useParams<{ category: string }>();
   const [activeSlug, setActiveSlug] = useState<string>('');
+  const [editing, setEditing] = useState(false);
+  const [showLogin, setShowLogin] = useState(false);
+  // Local cache of edited content for instant preview after save
+  const [editedContent, setEditedContent] = useState<Record<string, string>>({});
 
+  const { isLoggedIn, logout } = useAuth();
   const categoryInfo = categories.find(c => c.slug === category);
 
   const { pages, allHeadings } = useMarkdownPages(category || '');
@@ -30,10 +38,25 @@ export default function NotePage() {
     }
   }, [sortedPages, activeSlug]);
 
+  useEffect(() => {
+    // Reset edit state when switching pages
+    setEditing(false);
+  }, [activeSlug]);
+
   const activePage = useMemo(
     () => sortedPages.find(p => p.slug === activeSlug),
     [sortedPages, activeSlug]
   );
+
+  // Use edited content if available, otherwise use original
+  const displayContent = activePage
+    ? (editedContent[activePage.slug] ?? activePage.content)
+    : '';
+
+  // Derive file path from active page slug
+  const filePath = activePage
+    ? `src/content/${category}/${activePage.slug}.md`
+    : '';
 
   const handleNavigate = (slug: string, headingId?: string) => {
     setActiveSlug(slug);
@@ -43,6 +66,13 @@ export default function NotePage() {
       }, 150);
     }
   };
+
+  const handleSave = useCallback((newContent: string) => {
+    if (activePage) {
+      setEditedContent(prev => ({ ...prev, [activePage.slug]: newContent }));
+    }
+    setEditing(false);
+  }, [activePage]);
 
   if (!categoryInfo || !categoryInfo.isAvailable) {
     return (
@@ -66,7 +96,24 @@ export default function NotePage() {
         <h1 className={styles.categoryTitle}>
           {categoryInfo.title}
         </h1>
-        <div className={styles.spacer} />
+        <div className={styles.actions}>
+          {isLoggedIn ? (
+            editing ? null : (
+              <>
+                <button className="pixel-button" onClick={() => setEditing(true)}>
+                  edit
+                </button>
+                <button className="pixel-button" onClick={logout} style={{ marginLeft: 8 }}>
+                  logout
+                </button>
+              </>
+            )
+          ) : (
+            <button className="pixel-button" onClick={() => setShowLogin(true)}>
+              login
+            </button>
+          )}
+        </div>
       </header>
 
       <div className={styles.body}>
@@ -79,12 +126,23 @@ export default function NotePage() {
 
         <main className={styles.content}>
           {activePage ? (
-            <MarkdownRenderer content={activePage.content} />
+            editing ? (
+              <MarkdownEditor
+                content={displayContent}
+                filePath={filePath}
+                onSave={handleSave}
+                onCancel={() => setEditing(false)}
+              />
+            ) : (
+              <MarkdownRenderer content={displayContent} />
+            )
           ) : (
             <p className={styles.emptyHint}>请从左侧目录选择一篇笔记</p>
           )}
         </main>
       </div>
+
+      {showLogin && <LoginModal onClose={() => setShowLogin(false)} />}
     </div>
   );
 }
