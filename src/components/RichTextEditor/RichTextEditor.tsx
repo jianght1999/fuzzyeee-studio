@@ -9,7 +9,7 @@ const FONTS = [
   { label: 'Sans', value: "system-ui, sans-serif" },
 ];
 
-const SIZES = ['12px', '14px', '16px', '18px', '20px', '24px'];
+const SIZES = ['10px', '20px', '30px', '40px'];
 const COLORS = ['#333', '#555', '#888', '#b8a88a', '#c44', '#48b', '#494', '#000'];
 
 interface RichTextEditorProps {

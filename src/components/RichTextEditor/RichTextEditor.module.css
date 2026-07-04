@@ -55,6 +55,8 @@
   border: 3px solid var(--color-border);
   background: var(--color-bg);
   color: var(--color-text);
+  font-family: var(--font-pixel);
+  font-size: 20px;
   outline: none;
   overflow-y: auto;
   min-height: 500px;

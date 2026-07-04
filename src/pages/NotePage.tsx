@@ -18,11 +18,10 @@ const FONT_OPTIONS = [
 ];
 
 const SIZE_OPTIONS = [
-  { label: '14px', value: '14px' },
-  { label: '16px', value: '16px' },
-  { label: '18px', value: '18px' },
+  { label: '10px', value: '10px' },
   { label: '20px', value: '20px' },
-  { label: '24px', value: '24px' },
+  { label: '30px', value: '30px' },
+  { label: '40px', value: '40px' },
 ];
 
 export default function NotePage() {
@@ -32,7 +31,7 @@ export default function NotePage() {
   const [showLogin, setShowLogin] = useState(false);
   const [editedContent, setEditedContent] = useState<Record<string, string>>({});
   const [viewFont, setViewFont] = useState(FONT_OPTIONS[0].value);
-  const [viewSize, setViewSize] = useState(SIZE_OPTIONS[2].value);
+  const [viewSize, setViewSize] = useState(SIZE_OPTIONS[1].value); // 20px default
   const [orderOverrides, setOrderOverrides] = useState<Record<string, string[]>>({});
 
   const { isLoggedIn, logout, createPage, deletePage, saveMarkdown, token } = useAuth();
