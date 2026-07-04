@@ -13,7 +13,7 @@ export default function PixelNavbar() {
     <nav className={styles.navbar}>
       <div className={styles.left} />
       <div className={styles.right}>
-        <button className={styles.themeToggle} onClick={toggle} title="toggle theme">
+        <button className="pixel-button" onClick={toggle} title="toggle theme">
           {theme === 'dark' ? '☀' : '☾'}
         </button>
         {isLoggedIn ? (

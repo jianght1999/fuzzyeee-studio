@@ -141,7 +141,7 @@ export default function NotePage() {
           {categoryInfo.title}
         </h1>
         <div className={styles.actions}>
-          <button className={styles.themeBtn} onClick={toggleTheme} title="toggle theme">
+          <button className="pixel-button" onClick={toggleTheme} title="toggle theme">
             {theme === 'dark' ? '☀' : '☾'}
           </button>
           {isLoggedIn ? (
