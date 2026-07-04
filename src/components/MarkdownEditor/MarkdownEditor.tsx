@@ -3,7 +3,7 @@ import { useAuth } from '../../contexts/AuthContext';
 import styles from './MarkdownEditor.module.css';
 
 const FONT_OPTIONS = [
-  { label: 'Pixel', value: "'Zpix', 'Press Start 2P', monospace" },
+  { label: 'Pixel', value: "'Fenghuang', 'Press Start 2P', monospace" },
   { label: 'Mono', value: "'Fira Code', 'Courier New', monospace" },
   { label: 'Serif', value: "Georgia, 'Times New Roman', serif" },
   { label: 'Sans', value: "system-ui, sans-serif" },

@@ -10,6 +10,7 @@ interface SidebarProps {
   onAddPage?: (name: string, parentSlug?: string) => void;
   onDeletePage?: (slug: string) => void;
   onRenamePage?: (oldSlug: string, newName: string) => void;
+  onReorder?: (slugs: string[], parentSlug: string | null) => void;
 }
 
 export default function Sidebar({
@@ -20,11 +21,13 @@ export default function Sidebar({
   onAddPage,
   onDeletePage,
   onRenamePage,
+  onReorder,
 }: SidebarProps) {
   const [expanded, setExpanded] = useState<Set<string>>(new Set());
   const [mobileOpen, setMobileOpen] = useState(false);
   const [renaming, setRenaming] = useState<string | null>(null);
   const [renameValue, setRenameValue] = useState('');
+  const [dragOver, setDragOver] = useState<string | null>(null);
 
   useEffect(() => {
     document.body.style.overflow = mobileOpen ? 'hidden' : '';
@@ -63,6 +66,39 @@ export default function Sidebar({
 
   const cancelRename = () => setRenaming(null);
 
+  const handleDragStart = (e: React.DragEvent, slug: string) => {
+    e.dataTransfer.effectAllowed = 'move';
+    e.dataTransfer.setData('text/plain', slug);
+  };
+
+  const handleDragOver = (e: React.DragEvent, slug: string) => {
+    e.preventDefault();
+    e.dataTransfer.dropEffect = 'move';
+    setDragOver(slug);
+  };
+
+  const handleDragLeave = () => setDragOver(null);
+
+  const handleDrop = (e: React.DragEvent, targetSlug: string, parentSlug: string | null) => {
+    e.preventDefault();
+    setDragOver(null);
+    const draggedSlug = e.dataTransfer.getData('text/plain');
+    if (!draggedSlug || draggedSlug === targetSlug) return;
+    const siblings = parentSlug
+      ? pages.filter(p => p.parentSlug === parentSlug)
+      : pages.filter(p => !p.parentSlug);
+    const slugs = siblings.map(p => p.slug.replace(/^.*\//, ''));
+    const draggedName = draggedSlug.replace(/^.*\//, '');
+    const targetName = targetSlug.replace(/^.*\//, '');
+    // Remove dragged from current position, insert before target
+    const fromIdx = slugs.indexOf(draggedName);
+    const toIdx = slugs.indexOf(targetName);
+    if (fromIdx === -1 || toIdx === -1) return;
+    slugs.splice(fromIdx, 1);
+    slugs.splice(toIdx, 0, draggedName);
+    onReorder?.(slugs, parentSlug);
+  };
+
   const handleAdd = (parentSlug?: string) => {
     const label = parentSlug ? `new sub-page under "${parentSlug}"` : 'new page name';
     const name = window.prompt(label);
@@ -87,7 +123,14 @@ export default function Sidebar({
 
     return (
       <div key={page.slug}>
-        <div className={`${styles.pageRow} ${isChild ? styles.pageRowChild : ''}`}>
+        <div
+          className={`${styles.pageRow} ${isChild ? styles.pageRowChild : ''} ${dragOver === page.slug ? styles.dragOver : ''}`}
+          draggable={isLoggedIn && !renaming}
+          onDragStart={e => handleDragStart(e, page.slug)}
+          onDragOver={e => handleDragOver(e, page.slug)}
+          onDragLeave={handleDragLeave}
+          onDrop={e => handleDrop(e, page.slug, page.parentSlug)}
+        >
           {renaming === page.slug ? (
             <>
               <input

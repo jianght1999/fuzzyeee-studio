@@ -5,7 +5,7 @@ export interface Page {
   title: string;
   content: string;
   type: 'md' | 'html';
-  parentSlug: string | null; // null = root-level page
+  parentSlug: string | null;
   hasChildren: boolean;
 }
 
@@ -15,14 +15,9 @@ interface HeadingItem {
   level: 2 | 3;
 }
 
-const mdModules = import.meta.glob<string>(
-  '../content/**/*.md',
-  { eager: true, query: '?raw', import: 'default' }
-);
-const htmlModules = import.meta.glob<string>(
-  '../content/**/*.html',
-  { eager: true, query: '?raw', import: 'default' }
-);
+const mdModules   = import.meta.glob<string>('../content/**/*.md',   { eager: true, query: '?raw', import: 'default' });
+const htmlModules = import.meta.glob<string>('../content/**/*.html', { eager: true, query: '?raw', import: 'default' });
+const ordModules  = import.meta.glob<string>('../content/**/.order.json', { eager: true, query: '?raw', import: 'default' });
 
 function slugFromPath(path: string, prefix: string): string {
   return path.replace(prefix, '').replace(/\.(md|html)$/, '');
@@ -57,69 +52,77 @@ function extractHeadings(content: string, type: 'md' | 'html'): HeadingItem[] {
   return headings;
 }
 
+/** Read .order.json from a directory prefix, returns slug list */
+function loadOrder(prefix: string): string[] {
+  const key = `${prefix}.order.json`;
+  const mod = ordModules[key];
+  if (mod) {
+    try { const arr = JSON.parse(mod); if (Array.isArray(arr)) return arr; }
+    catch { /* ignore */ }
+  }
+  return [];
+}
+
 export function useMarkdownPages(category: string) {
   const pages = useMemo(() => {
     const prefix = `../content/${category}/`;
     const allPaths: { path: string; content: string; type: 'md' | 'html' }[] = [];
 
-    for (const [path, mod] of Object.entries(mdModules)) {
-      if (path.startsWith(prefix)) {
-        allPaths.push({ path, content: mod, type: 'md' });
-      }
-    }
-    for (const [path, mod] of Object.entries(htmlModules)) {
-      if (path.startsWith(prefix)) {
-        allPaths.push({ path, content: mod, type: 'html' });
-      }
-    }
+    for (const [path, mod] of Object.entries(mdModules))
+      if (path.startsWith(prefix)) allPaths.push({ path, content: mod, type: 'md' });
+    for (const [path, mod] of Object.entries(htmlModules))
+      if (path.startsWith(prefix)) allPaths.push({ path, content: mod, type: 'html' });
 
-    // Build page list with parent-child detection
     const result: Page[] = [];
     const childSlugs = new Set<string>();
 
     for (const { path, content, type } of allPaths) {
-      const fullSlug = slugFromPath(path, prefix); // e.g. "caged/c-shape" or "intro"
+      const fullSlug = slugFromPath(path, prefix);
       const parts = fullSlug.split('/');
       const parentSlug = parts.length > 1 ? parts[0] : null;
-
       if (parentSlug) childSlugs.add(parentSlug);
-
       result.push({
-        slug: fullSlug.replace(/\//g, '/'),
+        slug: fullSlug,
         title: extractTitle(content, type),
-        content,
-        type,
-        parentSlug,
+        content, type, parentSlug,
         hasChildren: false,
       });
     }
 
-    // Mark pages that have children
-    for (const p of result) {
-      if (childSlugs.has(p.slug.replace(/^.*\//, ''))) {
-        p.hasChildren = true;
-      }
-    }
+    for (const p of result)
+      if (childSlugs.has(p.slug.replace(/^.*\//, ''))) p.hasChildren = true;
 
-    // Sort: root pages first (intro → others → placeholder), then children
+    const rootOrder = loadOrder(prefix);
+
     return result.sort((a, b) => {
       if (!a.parentSlug && b.parentSlug) return -1;
       if (a.parentSlug && !b.parentSlug) return 1;
       if (a.parentSlug && b.parentSlug) {
         if (a.parentSlug !== b.parentSlug) return a.parentSlug.localeCompare(b.parentSlug);
+        const o = loadOrder(`${prefix}${a.parentSlug}/`);
+        const ai = o.indexOf(a.slug.replace(/^.*\//, ''));
+        const bi = o.indexOf(b.slug.replace(/^.*\//, ''));
+        if (ai !== -1 && bi !== -1) return ai - bi;
+        if (ai !== -1) return -1;
+        if (bi !== -1) return 1;
       }
-      if (a.slug === 'intro' || a.slug.endsWith('/overview')) return -1;
-      if (b.slug === 'intro' || b.slug.endsWith('/overview')) return 1;
+      const an = a.slug.replace(/^.*\//, '');
+      const bn = b.slug.replace(/^.*\//, '');
+      const ai = rootOrder.indexOf(an);
+      const bi = rootOrder.indexOf(bn);
+      if (ai !== -1 && bi !== -1) return ai - bi;
+      if (ai !== -1) return -1;
+      if (bi !== -1) return 1;
+      if (an === 'intro' || an === 'overview') return -1;
+      if (bn === 'intro' || bn === 'overview') return 1;
       return a.slug.localeCompare(b.slug);
     });
   }, [category]);
 
   const allHeadings = useMemo(() => {
-    const result: { pageSlug: string; headings: HeadingItem[] }[] = [];
-    for (const page of pages) {
-      result.push({ pageSlug: page.slug, headings: extractHeadings(page.content, page.type) });
-    }
-    return result;
+    const r: { pageSlug: string; headings: HeadingItem[] }[] = [];
+    for (const p of pages) r.push({ pageSlug: p.slug, headings: extractHeadings(p.content, p.type) });
+    return r;
   }, [pages]);
 
   return { pages, allHeadings };

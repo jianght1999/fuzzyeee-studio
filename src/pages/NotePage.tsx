@@ -12,7 +12,7 @@ import LoginModal from '../components/LoginModal/LoginModal';
 import styles from './NotePage.module.css';
 
 const FONT_OPTIONS = [
-  { label: 'Pixel', value: "'Zpix', 'Press Start 2P', monospace" },
+  { label: 'Pixel', value: "'Fenghuang', 'Press Start 2P', monospace" },
   { label: 'Mono', value: "'Fira Code', 'Courier New', monospace" },
   { label: 'Serif', value: "Georgia, 'Times New Roman', serif" },
   { label: 'Sans', value: "system-ui, sans-serif" },
@@ -35,7 +35,7 @@ export default function NotePage() {
   const [viewFont, setViewFont] = useState(FONT_OPTIONS[0].value);
   const [viewSize, setViewSize] = useState(SIZE_OPTIONS[2].value);
 
-  const { isLoggedIn, logout, createPage, deletePage, saveMarkdown } = useAuth();
+  const { isLoggedIn, logout, createPage, deletePage, saveMarkdown, token } = useAuth();
   const categoryInfo = categories.find(c => c.slug === category);
 
   const { pages } = useMarkdownPages(category || '');
@@ -73,6 +73,20 @@ export default function NotePage() {
   const filePath = activePage
     ? `src/content/${category}/${activePage.slug}${fileExt}`
     : '';
+
+  const handleReorder = async (slugs: string[], parentSlug: string | null) => {
+    if (!token) return;
+    const dir = parentSlug ? `${category}/${parentSlug}` : category;
+    const orderPath = `src/content/${dir}/.order.json`;
+    try {
+      await fetch('/api/save', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ token, path: orderPath, content: JSON.stringify(slugs, null, 2) }),
+      });
+      window.location.reload();
+    } catch { /* ignore */ }
+  };
 
   const handleSave = useCallback((newContent: string) => {
     if (activePage) {
@@ -175,6 +189,7 @@ export default function NotePage() {
           onAddPage={handleAddPage}
           onDeletePage={handleDeletePage}
           onRenamePage={handleRenamePage}
+          onReorder={handleReorder}
         />
 
         <main className={styles.content}>
