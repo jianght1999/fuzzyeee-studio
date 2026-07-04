@@ -1,26 +1,19 @@
 import { useState, useEffect } from 'react';
+import type { Page } from '../../hooks/useMarkdownPages';
 import styles from './Sidebar.module.css';
 
-interface HeadingItem {
-  id: string;
-  text: string;
-  level: 2 | 3;
-}
-
 interface SidebarProps {
-  pages: { slug: string; title: string }[];
-  headingsByPage: { pageSlug: string; headings: HeadingItem[] }[];
+  pages: Page[];
   activeSlug?: string;
-  onNavigate: (slug: string, headingId?: string) => void;
+  onNavigate: (slug: string) => void;
   isLoggedIn?: boolean;
-  onAddPage?: (name: string) => void;
+  onAddPage?: (name: string, parentSlug?: string) => void;
   onDeletePage?: (slug: string) => void;
   onRenamePage?: (oldSlug: string, newName: string) => void;
 }
 
 export default function Sidebar({
   pages,
-  headingsByPage,
   activeSlug,
   onNavigate,
   isLoggedIn,
@@ -28,9 +21,9 @@ export default function Sidebar({
   onDeletePage,
   onRenamePage,
 }: SidebarProps) {
-  const [collapsedPages, setCollapsedPages] = useState<Set<string>>(new Set());
+  const [expanded, setExpanded] = useState<Set<string>>(new Set());
   const [mobileOpen, setMobileOpen] = useState(false);
-  const [renamingSlug, setRenamingSlug] = useState<string | null>(null);
+  const [renaming, setRenaming] = useState<string | null>(null);
   const [renameValue, setRenameValue] = useState('');
 
   useEffect(() => {
@@ -38,8 +31,11 @@ export default function Sidebar({
     return () => { document.body.style.overflow = ''; };
   }, [mobileOpen]);
 
-  const toggleCollapse = (slug: string) => {
-    setCollapsedPages(prev => {
+  const rootPages = pages.filter(p => !p.parentSlug);
+  const childrenOf = (parentSlug: string) => pages.filter(p => p.parentSlug === parentSlug);
+
+  const toggleExpand = (slug: string) => {
+    setExpanded(prev => {
       const next = new Set(prev);
       if (next.has(slug)) next.delete(slug);
       else next.add(slug);
@@ -47,117 +43,109 @@ export default function Sidebar({
     });
   };
 
-  const handleNavigate = (slug: string, headingId?: string) => {
-    onNavigate(slug, headingId);
+  const handleNavigate = (slug: string) => {
+    onNavigate(slug);
     setMobileOpen(false);
-  };
-
-  const handleAdd = () => {
-    const name = window.prompt('new page name (without .md):');
-    if (name && name.trim()) {
-      onAddPage?.(name.trim());
-    }
-  };
-
-  const handleDelete = (slug: string, e: React.MouseEvent) => {
-    e.stopPropagation();
-    if (window.confirm(`delete "${slug}.md"?`)) {
-      onDeletePage?.(slug);
-    }
   };
 
   const startRename = (slug: string, title: string, e: React.MouseEvent) => {
     e.stopPropagation();
-    setRenamingSlug(slug);
+    setRenaming(slug);
     setRenameValue(title);
   };
 
   const submitRename = () => {
-    if (renamingSlug && renameValue.trim()) {
-      onRenamePage?.(renamingSlug, renameValue.trim());
+    if (renaming && renameValue.trim()) {
+      onRenamePage?.(renaming, renameValue.trim());
     }
-    setRenamingSlug(null);
+    setRenaming(null);
+  };
+
+  const cancelRename = () => setRenaming(null);
+
+  const handleAdd = (parentSlug?: string) => {
+    const label = parentSlug ? `new sub-page under "${parentSlug}"` : 'new page name';
+    const name = window.prompt(label);
+    if (name?.trim()) onAddPage?.(name.trim(), parentSlug);
+  };
+
+  const handleDelete = (slug: string, e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (window.confirm(`delete "${slug}"?`)) onDeletePage?.(slug);
+  };
+
+  const renderPage = (page: Page, isChild = false) => {
+    const kids = childrenOf(page.slug.replace(/^.*\//, ''));
+    const hasKids = kids.length > 0 || page.hasChildren;
+    const isExpanded = expanded.has(page.slug);
+    const isActive = page.slug === activeSlug;
+
+    if (isChild && isExpanded) {
+      // Auto-activate first child if none selected
+      // (no side effects in render)
+    }
+
+    return (
+      <div key={page.slug}>
+        <div className={`${styles.pageRow} ${isChild ? styles.pageRowChild : ''}`}>
+          {renaming === page.slug ? (
+            <>
+              <input
+                className={styles.renameInput}
+                value={renameValue}
+                onChange={e => setRenameValue(e.target.value)}
+                onKeyDown={e => { if (e.key === 'Enter') submitRename(); if (e.key === 'Escape') cancelRename(); }}
+                autoFocus
+                onClick={e => e.stopPropagation()}
+              />
+              <button className={styles.renameBtn} onClick={submitRename} title="save">✓</button>
+              <button className={styles.renameBtn} onClick={cancelRename} title="cancel">✕</button>
+            </>
+          ) : (
+            <>
+              <button
+                className={`${styles.pageItem} ${isActive ? styles.pageItemActive : ''}`}
+                onClick={() => {
+                  handleNavigate(page.slug);
+                  if (hasKids) toggleExpand(page.slug);
+                }}
+              >
+                <span className={styles.pageTitle}>{page.title}</span>
+                {hasKids && (
+                  <span className={`${styles.arrow} ${isExpanded ? '' : styles.arrowCollapsed}`}>▾</span>
+                )}
+              </button>
+
+              {isLoggedIn && (
+                <span className={styles.actions}>
+                  {!isChild && (
+                    <button className={styles.actionBtn} onClick={e => { e.stopPropagation(); handleAdd(page.slug.replace(/^.*\//, '')); }} title="add sub-page">＋</button>
+                  )}
+                  <button className={styles.actionBtn} onClick={e => startRename(page.slug, page.title, e)} title="rename">✎</button>
+                  <button className={styles.actionBtn} onClick={e => handleDelete(page.slug, e)} title="delete">✕</button>
+                </span>
+              )}
+            </>
+          )}
+        </div>
+
+        {/* Child pages */}
+        {hasKids && isExpanded && (
+          <div className={styles.children}>
+            {kids.map(kid => renderPage(kid, true))}
+          </div>
+        )}
+      </div>
+    );
   };
 
   const sidebarContent = (
     <>
       <div className={styles.list}>
-        {pages.map((page) => {
-          const headingData = headingsByPage.find(h => h.pageSlug === page.slug);
-          const isActive = page.slug === activeSlug;
-          const isCollapsed = collapsedPages.has(page.slug);
-          const hasHeadings = headingData && headingData.headings.length > 0;
-
-          return (
-            <div key={page.slug} className={styles.pageGroup}>
-              <div className={styles.pageRow}>
-                {renamingSlug === page.slug ? (
-                  <input
-                    className={styles.renameInput}
-                    value={renameValue}
-                    onChange={(e) => setRenameValue(e.target.value)}
-                    onBlur={submitRename}
-                    onKeyDown={(e) => { if (e.key === 'Enter') submitRename(); if (e.key === 'Escape') setRenamingSlug(null); }}
-                    autoFocus
-                    onClick={(e) => e.stopPropagation()}
-                  />
-                ) : (
-                  <button
-                    className={`${styles.pageItem} ${isActive ? styles.pageItemActive : ''}`}
-                    onClick={() => {
-                      if (hasHeadings) toggleCollapse(page.slug);
-                      handleNavigate(page.slug);
-                    }}
-                  >
-                    <span className={styles.pageTitle}>{page.title}</span>
-                    {hasHeadings && (
-                      <span className={`${styles.arrow} ${isCollapsed ? styles.arrowCollapsed : ''}`}>
-                        ▾
-                      </span>
-                    )}
-                  </button>
-                )}
-
-                {isLoggedIn && renamingSlug !== page.slug && (
-                  <span className={styles.actions}>
-                    <button
-                      className={styles.actionBtn}
-                      onClick={(e) => startRename(page.slug, page.title, e)}
-                      title="rename"
-                    >
-                      ✎
-                    </button>
-                    <button
-                      className={styles.actionBtn}
-                      onClick={(e) => handleDelete(page.slug, e)}
-                      title="delete"
-                    >
-                      ✕
-                    </button>
-                  </span>
-                )}
-              </div>
-
-              {hasHeadings && !isCollapsed && (
-                <div className={styles.headings}>
-                  {headingData!.headings.map((heading) => (
-                    <button
-                      key={heading.id}
-                      className={`${styles.headingItem} ${heading.level === 3 ? styles.headingL3 : ''}`}
-                      onClick={() => handleNavigate(page.slug, heading.id)}
-                    >
-                      {heading.text}
-                    </button>
-                  ))}
-                </div>
-              )}
-            </div>
-          );
-        })}
+        {rootPages.map(p => renderPage(p))}
       </div>
-
       {isLoggedIn && (
-        <button className={styles.addBtn} onClick={handleAdd}>
+        <button className={styles.addBtn} onClick={() => handleAdd()}>
           ＋ new page
         </button>
       )}
@@ -166,24 +154,12 @@ export default function Sidebar({
 
   return (
     <>
-      <button
-        className={styles.hamburger}
-        onClick={() => setMobileOpen(true)}
-        aria-label="打开目录"
-      >
-        ☰
-      </button>
-
-      <aside className={styles.desktopSidebar}>
-        {sidebarContent}
-      </aside>
-
+      <button className={styles.hamburger} onClick={() => setMobileOpen(true)}>☰</button>
+      <aside className={styles.desktopSidebar}>{sidebarContent}</aside>
       {mobileOpen && (
         <>
           <div className={styles.overlay} onClick={() => setMobileOpen(false)} />
-          <aside className={styles.mobileSidebar}>
-            {sidebarContent}
-          </aside>
+          <aside className={styles.mobileSidebar}>{sidebarContent}</aside>
         </>
       )}
     </>

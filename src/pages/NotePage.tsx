@@ -38,7 +38,7 @@ export default function NotePage() {
   const { isLoggedIn, logout, createPage, deletePage, saveMarkdown } = useAuth();
   const categoryInfo = categories.find(c => c.slug === category);
 
-  const { pages, allHeadings } = useMarkdownPages(category || '');
+  const { pages } = useMarkdownPages(category || '');
 
   const sortedPages = useMemo(() => {
     return [...pages].sort((a, b) => {
@@ -74,15 +74,6 @@ export default function NotePage() {
     ? `src/content/${category}/${activePage.slug}${fileExt}`
     : '';
 
-  const handleNavigate = (slug: string, headingId?: string) => {
-    setActiveSlug(slug);
-    if (headingId) {
-      setTimeout(() => {
-        document.getElementById(headingId)?.scrollIntoView({ behavior: 'auto' });
-      }, 150);
-    }
-  };
-
   const handleSave = useCallback((newContent: string) => {
     if (activePage) {
       setEditedContent(prev => ({ ...prev, [activePage.slug]: newContent }));
@@ -91,12 +82,11 @@ export default function NotePage() {
   }, [activePage]);
 
   // --- Sidebar CRUD ---
-  const handleAddPage = async (name: string) => {
-    const path = `src/content/${category}/${name}.html`;
+  const handleAddPage = async (name: string, parentSlug?: string) => {
+    const dir = parentSlug ? `${category}/${parentSlug}` : category;
+    const path = `src/content/${dir}/${name}.html`;
     const ok = await createPage(path, `<h1>${name}</h1>\n<p></p>`);
-    if (ok) {
-      window.location.reload();
-    }
+    if (ok) window.location.reload();
   };
 
   const handleDeletePage = async (slug: string) => {
@@ -104,9 +94,7 @@ export default function NotePage() {
     const ext = page?.type === 'html' ? '.html' : '.md';
     const path = `src/content/${category}/${slug}${ext}`;
     const ok = await deletePage(path);
-    if (ok) {
-      window.location.reload();
-    }
+    if (ok) window.location.reload();
   };
 
   const handleRenamePage = async (oldSlug: string, newName: string) => {
@@ -116,9 +104,7 @@ export default function NotePage() {
     let newContent: string;
     if (page.type === 'html') {
       newContent = oldContent.replace(/<h1[^>]*>.*?<\/h1>/i, `<h1>${newName}</h1>`);
-      if (!/<h1/i.test(newContent)) {
-        newContent = `<h1>${newName}</h1>\n${newContent}`;
-      }
+      if (!/<h1/i.test(newContent)) newContent = `<h1>${newName}</h1>\n${newContent}`;
     } else {
       if (oldContent.match(/^#\s+.+$/m)) {
         newContent = oldContent.replace(/^#\s+.+$/m, `# ${newName}`);
@@ -127,8 +113,8 @@ export default function NotePage() {
       }
     }
     const ext = page.type === 'html' ? '.html' : '.md';
-    const filePath = `src/content/${category}/${oldSlug}${ext}`;
-    const ok = await saveMarkdown(filePath, newContent);
+    const fp = `src/content/${category}/${oldSlug}${ext}`;
+    const ok = await saveMarkdown(fp, newContent);
     if (ok) {
       setEditedContent(prev => ({ ...prev, [oldSlug]: newContent }));
       window.location.reload();
@@ -183,9 +169,8 @@ export default function NotePage() {
       <div className={styles.body}>
         <Sidebar
           pages={sortedPages}
-          headingsByPage={allHeadings}
           activeSlug={activeSlug}
-          onNavigate={handleNavigate}
+          onNavigate={setActiveSlug}
           isLoggedIn={isLoggedIn}
           onAddPage={handleAddPage}
           onDeletePage={handleDeletePage}

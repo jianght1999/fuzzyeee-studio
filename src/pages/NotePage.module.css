@@ -10,8 +10,8 @@
   align-items: center;
   padding: 12px 24px;
   border-bottom: 4px solid #000;
-  box-shadow: 0 4px 0 #3a3a5c;
-  background: #16213e;
+  box-shadow: 0 4px 0 var(--color-border);
+  background: var(--color-card-bg);
   position: sticky;
   top: 0;
   z-index: 50;
