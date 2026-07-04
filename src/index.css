@@ -1,111 +1,215 @@
+/* ===== 像素风全局设计系统 ===== */
+
+/* --- 字体引入 --- */
+@import url('https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap');
+
+@font-face {
+  font-family: 'Zpix';
+  src: url('https://cdn.jsdelivr.net/npm/zpix@3.1.0/dist/Zpix.woff2') format('woff2');
+  font-display: swap;
+}
+
+/* --- CSS 变量 --- */
 :root {
-  --text: #6b6375;
-  --text-h: #08060d;
-  --bg: #fff;
-  --border: #e5e4e7;
-  --code-bg: #f4f3ec;
-  --accent: #aa3bff;
-  --accent-bg: rgba(170, 59, 255, 0.1);
-  --accent-border: rgba(170, 59, 255, 0.5);
-  --social-bg: rgba(244, 243, 236, 0.5);
-  --shadow:
-    rgba(0, 0, 0, 0.1) 0 10px 15px -3px, rgba(0, 0, 0, 0.05) 0 4px 6px -2px;
+  /* 配色 - 深色像素主题 */
+  --color-bg: #0f0f1b;
+  --color-card-bg: #16213e;
+  --color-text: #c0c0c0;
+  --color-text-dim: #6a6a8a;
+  --color-highlight: #00ff88;
+  --color-highlight-alt: #ffcc00;
+  --color-border: #3a3a5c;
+  --color-accent: #ff6b6b;
+  --color-link: #66b3ff;
 
-  --sans: system-ui, 'Segoe UI', Roboto, sans-serif;
-  --heading: system-ui, 'Segoe UI', Roboto, sans-serif;
-  --mono: ui-monospace, Consolas, monospace;
+  /* 字体 */
+  --font-pixel: 'Zpix', 'Press Start 2P', monospace;
+  --font-code: 'Fira Code', 'Courier New', monospace;
 
-  font: 18px/145% var(--sans);
-  letter-spacing: 0.18px;
-  color-scheme: light dark;
-  color: var(--text);
-  background: var(--bg);
-  font-synthesis: none;
-  text-rendering: optimizeLegibility;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
-
-  @media (max-width: 1024px) {
-    font-size: 16px;
-  }
+  /* 间距 */
+  --space-unit: 4px;
+  --border-width: 4px;
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --text: #9ca3af;
-    --text-h: #f3f4f6;
-    --bg: #16171d;
-    --border: #2e303a;
-    --code-bg: #1f2028;
-    --accent: #c084fc;
-    --accent-bg: rgba(192, 132, 252, 0.15);
-    --accent-border: rgba(192, 132, 252, 0.5);
-    --social-bg: rgba(47, 48, 58, 0.5);
-    --shadow:
-      rgba(0, 0, 0, 0.4) 0 10px 15px -3px, rgba(0, 0, 0, 0.25) 0 4px 6px -2px;
-  }
-
-  #social .button-icon {
-    filter: invert(1) brightness(2);
-  }
-}
-
-#root {
-  width: 1126px;
-  max-width: 100%;
-  margin: 0 auto;
-  text-align: center;
-  border-inline: 1px solid var(--border);
-  min-height: 100svh;
-  display: flex;
-  flex-direction: column;
+/* --- 全局重置 --- */
+*, *::before, *::after {
   box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html {
+  font-size: 16px;
+  -webkit-font-smoothing: none;
+  -moz-osx-font-smoothing: unset;
 }
 
 body {
-  margin: 0;
+  font-family: var(--font-pixel);
+  background-color: var(--color-bg);
+  color: var(--color-text);
+  line-height: 1.8;
+  min-height: 100vh;
+  image-rendering: pixelated;
+  image-rendering: crisp-edges;
 }
 
-h1,
-h2 {
-  font-family: var(--heading);
-  font-weight: 500;
-  color: var(--text-h);
+/* --- 像素卡片 --- */
+.pixel-card {
+  border: var(--border-width) solid var(--color-border);
+  box-shadow: 4px 4px 0 #000;
+  background: var(--color-card-bg);
+  image-rendering: pixelated;
+  image-rendering: crisp-edges;
 }
 
-h1 {
-  font-size: 56px;
-  letter-spacing: -1.68px;
-  margin: 32px 0;
-  @media (max-width: 1024px) {
-    font-size: 36px;
-    margin: 20px 0;
-  }
-}
-h2 {
-  font-size: 24px;
-  line-height: 118%;
-  letter-spacing: -0.24px;
-  margin: 0 0 8px;
-  @media (max-width: 1024px) {
-    font-size: 20px;
-  }
-}
-p {
-  margin: 0;
+.pixel-card:hover {
+  border-color: var(--color-highlight);
+  box-shadow: 6px 6px 0 #000;
+  transform: translate(-2px, -2px) scale(1.03);
 }
 
-code,
-.counter {
-  font-family: var(--mono);
-  display: inline-flex;
-  border-radius: 4px;
-  color: var(--text-h);
+.pixel-card--disabled {
+  border-style: dashed;
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.pixel-card--disabled:hover {
+  border-color: var(--color-border);
+  box-shadow: 4px 4px 0 #000;
+  transform: none;
+}
+
+/* --- 像素按钮 --- */
+.pixel-button {
+  font-family: var(--font-pixel);
+  font-size: 14px;
+  padding: 8px 16px;
+  border: 3px solid #000;
+  background: var(--color-card-bg);
+  color: var(--color-text);
+  cursor: pointer;
+  box-shadow: 3px 3px 0 #333;
+  text-transform: uppercase;
+  image-rendering: pixelated;
+}
+
+.pixel-button:hover {
+  background: var(--color-highlight);
+  color: #000;
+}
+
+.pixel-button:active {
+  transform: translate(2px, 2px);
+  box-shadow: 1px 1px 0 #333;
+}
+
+.pixel-button--active {
+  background: var(--color-highlight);
+  color: #000;
+  box-shadow: 1px 1px 0 #333;
+  transform: translate(2px, 2px);
+}
+
+/* --- 像素链接 --- */
+a {
+  color: var(--color-link);
+  text-decoration: none;
+}
+
+a:hover {
+  color: var(--color-highlight);
+}
+
+/* --- 像素 divider --- */
+.pixel-divider {
+  border: none;
+  border-top: 4px solid var(--color-border);
+  box-shadow: 0 2px 0 #000;
+  margin: 16px 0;
+}
+
+/* --- 像素标题 --- */
+h1, h2, h3, h4, h5, h6 {
+  font-family: var(--font-pixel);
+  color: var(--color-highlight);
+  line-height: 1.4;
+}
+
+h1 { font-size: 24px; }
+h2 { font-size: 20px; }
+h3 { font-size: 18px; }
+
+/* --- 像素代码块 --- */
+pre {
+  background: #0a0a14;
+  border: 3px solid var(--color-border);
+  padding: 16px;
+  overflow-x: auto;
+  font-family: var(--font-code);
+  font-size: 14px;
+  line-height: 1.6;
 }
 
 code {
-  font-size: 15px;
-  line-height: 135%;
-  padding: 4px 8px;
-  background: var(--code-bg);
+  font-family: var(--font-code);
+  background: #0a0a14;
+  padding: 2px 6px;
+  font-size: 14px;
+}
+
+pre code {
+  background: none;
+  padding: 0;
+}
+
+/* --- 像素引用块 --- */
+blockquote {
+  border-left: 4px solid var(--color-highlight);
+  padding-left: 16px;
+  margin: 16px 0;
+  color: var(--color-text-dim);
+}
+
+/* --- 滚动条 --- */
+::-webkit-scrollbar {
+  width: 12px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--color-bg);
+  border: 2px solid var(--color-border);
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--color-border);
+  border: 2px solid #000;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--color-highlight);
+}
+
+/* --- 闪烁动画 --- */
+@keyframes pixel-blink {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0; }
+}
+
+@keyframes pixel-float {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-4px); }
+}
+
+/* --- 选中文字 --- */
+::selection {
+  background: var(--color-highlight);
+  color: #000;
+}
+
+/* --- 图片像素渲染 --- */
+img {
+  image-rendering: pixelated;
+  image-rendering: crisp-edges;
 }
