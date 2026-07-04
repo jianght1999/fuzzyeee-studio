@@ -1,4 +1,4 @@
-import { useState, useRef } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { useAuth } from '../../contexts/AuthContext';
 import styles from './RichTextEditor.module.css';
 
@@ -24,6 +24,14 @@ export default function RichTextEditor({ content, filePath, onSave, onCancel }: 
   const editorRef = useRef<HTMLDivElement>(null);
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
+
+  // Set initial content only once, then let contentEditable manage itself
+  useEffect(() => {
+    if (editorRef.current && editorRef.current.innerHTML !== content) {
+      editorRef.current.innerHTML = content;
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const exec = (cmd: string, val?: string) => {
     document.execCommand(cmd, false, val);
@@ -89,7 +97,6 @@ export default function RichTextEditor({ content, filePath, onSave, onCancel }: 
         className={styles.editable}
         contentEditable
         suppressContentEditableWarning
-        dangerouslySetInnerHTML={{ __html: content }}
       />
     </div>
   );
