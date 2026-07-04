@@ -105,11 +105,15 @@ export default function NotePage() {
   };
 
   const handleRenamePage = async (oldSlug: string, newName: string) => {
-    // Edit the # Title inside the markdown file, keep filename unchanged
     const page = sortedPages.find(p => p.slug === oldSlug);
     if (!page) return;
     const oldContent = editedContent[oldSlug] ?? page.content;
-    const newContent = oldContent.replace(/^#\s+.+$/m, `# ${newName}`);
+    let newContent: string;
+    if (oldContent.match(/^#\s+.+$/m)) {
+      newContent = oldContent.replace(/^#\s+.+$/m, `# ${newName}`);
+    } else {
+      newContent = `# ${newName}\n\n${oldContent}`;
+    }
     const filePath = `src/content/${category}/${oldSlug}.md`;
     const ok = await saveMarkdown(filePath, newContent);
     if (ok) {

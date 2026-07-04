@@ -66,14 +66,14 @@ export default function Sidebar({
     }
   };
 
-  const startRename = (slug: string, e: React.MouseEvent) => {
+  const startRename = (slug: string, title: string, e: React.MouseEvent) => {
     e.stopPropagation();
     setRenamingSlug(slug);
-    setRenameValue(slug);
+    setRenameValue(title);
   };
 
   const submitRename = () => {
-    if (renamingSlug && renameValue.trim() && renameValue.trim() !== renamingSlug) {
+    if (renamingSlug && renameValue.trim()) {
       onRenamePage?.(renamingSlug, renameValue.trim());
     }
     setRenamingSlug(null);
@@ -122,7 +122,7 @@ export default function Sidebar({
                   <span className={styles.actions}>
                     <button
                       className={styles.actionBtn}
-                      onClick={(e) => startRename(page.slug, e)}
+                      onClick={(e) => startRename(page.slug, page.title, e)}
                       title="rename"
                     >
                       ✎

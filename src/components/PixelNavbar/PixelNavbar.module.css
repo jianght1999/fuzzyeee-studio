@@ -21,6 +21,21 @@
   align-items: center;
 }
 
+.themeToggle {
+  background: none;
+  border: 2px solid var(--color-border);
+  color: var(--color-text);
+  font-size: 18px;
+  padding: 4px 8px;
+  cursor: pointer;
+  line-height: 1;
+}
+
+.themeToggle:hover {
+  border-color: var(--color-highlight);
+  color: var(--color-highlight);
+}
+
 .navLink {
   font-family: var(--font-pixel);
   font-size: 14px;

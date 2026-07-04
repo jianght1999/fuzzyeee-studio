@@ -31,6 +31,33 @@
   --border-width: 4px;
 }
 
+/* --- 浅色主题 --- */
+[data-theme="light"] {
+  --color-bg: #f5f0e8;
+  --color-card-bg: #e8e0d0;
+  --color-text: #333333;
+  --color-text-dim: #888888;
+  --color-highlight: #4a4a4a;
+  --color-highlight-alt: #666666;
+  --color-border: #cccccc;
+  --color-accent: #999999;
+  --color-link: #8b7355;
+}
+
+[data-theme="light"] .pixel-card,
+[data-theme="light"] .pixel-button {
+  box-shadow: 4px 4px 0 #ccc;
+}
+
+[data-theme="light"] .pixel-card:hover {
+  box-shadow: 6px 6px 0 #bbb;
+}
+
+[data-theme="light"] pre,
+[data-theme="light"] code {
+  background: #e8e0d0;
+}
+
 /* --- 全局重置 --- */
 *, *::before, *::after {
   box-sizing: border-box;
