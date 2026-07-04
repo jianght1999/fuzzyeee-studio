@@ -75,43 +75,6 @@ export default function Sidebar({
 
   const cancelRename = () => setRenaming(null);
 
-  const handleDragStart = (e: React.DragEvent, slug: string) => {
-    e.dataTransfer.effectAllowed = 'move';
-    e.dataTransfer.setData('text/plain', slug);
-  };
-
-  const handleDragOver = (e: React.DragEvent, slug: string) => {
-    e.preventDefault();
-    e.dataTransfer.dropEffect = 'move';
-    // Only show indicator on items different from the dragged one
-    const dragged = e.dataTransfer.getData('text/plain');
-    if (dragged && dragged !== slug) setDragOver(slug);
-  };
-
-  const handleDragLeave = (e: React.DragEvent) => {
-    // Only clear if we're leaving the element (not entering a child)
-    if (e.currentTarget === e.target) setDragOver(null);
-  };
-
-  const handleDrop = (e: React.DragEvent, targetSlug: string, parentSlug: string | null) => {
-    e.preventDefault();
-    setDragOver(null);
-    const draggedSlug = e.dataTransfer.getData('text/plain');
-    if (!draggedSlug || draggedSlug === targetSlug) return;
-    const siblings = parentSlug
-      ? pages.filter(p => p.parentSlug === parentSlug)
-      : pages.filter(p => !p.parentSlug);
-    const slugs = siblings.map(p => p.slug.replace(/^.*\//, ''));
-    const draggedName = draggedSlug.replace(/^.*\//, '');
-    const targetName = targetSlug.replace(/^.*\//, '');
-    const fromIdx = slugs.indexOf(draggedName);
-    const toIdx = slugs.indexOf(targetName);
-    if (fromIdx === -1 || toIdx === -1) return;
-    slugs.splice(fromIdx, 1);
-    slugs.splice(toIdx, 0, draggedName);
-    onReorder?.(slugs, parentSlug);
-  };
-
   const handleAdd = (parentSlug?: string) => {
     const label = parentSlug ? `new sub-page under "${parentSlug}"` : 'new page name';
     const name = window.prompt(label);
@@ -138,18 +101,24 @@ export default function Sidebar({
       <div key={page.slug}>
         <div
           className={`${styles.pageRow} ${isChild ? styles.pageRowChild : ''} ${dragOver === page.slug ? styles.dragOver : ''}`}
-          onDragOver={e => handleDragOver(e, page.slug)}
-          onDragLeave={handleDragLeave}
-          onDrop={e => handleDrop(e, page.slug, page.parentSlug)}
+          draggable={isLoggedIn && !renaming ? 'true' : undefined}
+          onDragStart={e => { e.dataTransfer.effectAllowed = 'move'; e.dataTransfer.setData('text/plain', page.slug); }}
+          onDragOver={e => { e.preventDefault(); e.dataTransfer.dropEffect = 'move'; const d = e.dataTransfer.getData('text/plain'); if (d && d !== page.slug) setDragOver(page.slug); }}
+          onDragLeave={e => { if (e.currentTarget === e.target) setDragOver(null); }}
+          onDrop={e => {
+            e.preventDefault(); setDragOver(null);
+            const ds = e.dataTransfer.getData('text/plain');
+            if (!ds || ds === page.slug) return;
+            const siblings = page.parentSlug ? pages.filter(p => p.parentSlug === page.parentSlug) : pages.filter(p => !p.parentSlug);
+            const slugs = siblings.map(p => p.slug.replace(/^.*\//, ''));
+            const dn = ds.replace(/^.*\//, '');
+            const tn = page.slug.replace(/^.*\//, '');
+            const fi = slugs.indexOf(dn), ti = slugs.indexOf(tn);
+            if (fi === -1 || ti === -1) return;
+            slugs.splice(fi, 1); slugs.splice(ti, 0, dn);
+            onReorder?.(slugs, page.parentSlug);
+          }}
         >
-          {isLoggedIn && !renaming && (
-            <span
-              className={styles.dragHandle}
-              draggable
-              onDragStart={e => handleDragStart(e, page.slug)}
-              title="drag to reorder"
-            >⠿</span>
-          )}
           {renaming === page.slug ? (
             <>
               <input
@@ -167,6 +136,7 @@ export default function Sidebar({
             <>
               <button
                 className={`${styles.pageItem} ${isActive ? styles.pageItemActive : ''}`}
+                draggable="false"
                 onClick={() => {
                   handleNavigate(page.slug);
                   if (hasKids) toggleExpand(page.slug);
@@ -181,10 +151,10 @@ export default function Sidebar({
               {isLoggedIn && (
                 <span className={styles.actions}>
                   {!isChild && (
-                    <button className={styles.actionBtn} onClick={e => { e.stopPropagation(); handleAdd(page.slug.replace(/^.*\//, '')); }} title="add sub-page">＋</button>
+                    <button className={styles.actionBtn} draggable="false" onClick={e => { e.stopPropagation(); handleAdd(page.slug.replace(/^.*\//, '')); }} title="add sub-page">＋</button>
                   )}
-                  <button className={styles.actionBtn} onClick={e => startRename(page.slug, page.title, e)} title="rename">✎</button>
-                  <button className={styles.actionBtn} onClick={e => handleDelete(page.slug, e)} title="delete">✕</button>
+                  <button className={styles.actionBtn} draggable="false" onClick={e => startRename(page.slug, page.title, e)} title="rename">✎</button>
+                  <button className={styles.actionBtn} draggable="false" onClick={e => handleDelete(page.slug, e)} title="delete">✕</button>
                 </span>
               )}
             </>

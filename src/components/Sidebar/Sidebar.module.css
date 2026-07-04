@@ -22,18 +22,12 @@
   align-items: center;
 }
 
-.dragHandle {
+.pageRow[draggable="true"] {
   cursor: grab;
-  color: var(--color-text-dim);
-  font-size: 14px;
-  padding: 4px 2px 4px 6px;
-  user-select: none;
-  flex-shrink: 0;
 }
 
-.dragHandle:active {
+.pageRow[draggable="true"]:active {
   cursor: grabbing;
-  color: var(--color-highlight);
 }
 
 .pageRowChild {
