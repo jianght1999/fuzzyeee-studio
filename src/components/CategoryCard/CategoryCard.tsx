@@ -1,6 +1,5 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { usePixelTransition } from '../PixelTransition/PixelTransition';
 import type { Category } from '../../data/categories';
 import styles from './CategoryCard.module.css';
 
@@ -10,14 +9,11 @@ interface CategoryCardProps {
 
 export default function CategoryCard({ category }: CategoryCardProps) {
   const navigate = useNavigate();
-  const { navigateWithTransition } = usePixelTransition();
   const [imgError, setImgError] = useState(false);
 
   const handleClick = () => {
     if (!category.isAvailable) return;
-    navigateWithTransition(() => {
-      navigate(`/notes/${category.slug}`);
-    });
+    navigate(`/notes/${category.slug}`);
   };
 
   const cardClass = category.isAvailable
