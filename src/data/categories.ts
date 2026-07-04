@@ -21,7 +21,7 @@ export const categories: Category[] = [
     title: 'synthesizer',
     description: '',
     image: '/images/synth.png',
-    isAvailable: false,
+    isAvailable: true,
     emoji: '🎛️',
   },
   {
@@ -29,7 +29,7 @@ export const categories: Category[] = [
     title: 'reading',
     description: '',
     image: '/images/reading.png',
-    isAvailable: false,
+    isAvailable: true,
     emoji: '📚',
   },
   {
