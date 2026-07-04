@@ -32,8 +32,7 @@
 }
 
 .dragOver {
-  outline: 2px dashed var(--color-highlight);
-  background: var(--color-bg);
+  border-top: 3px dashed var(--color-highlight);
 }
 
 .pageItem {

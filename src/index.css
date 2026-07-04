@@ -3,10 +3,10 @@
 /* --- 字体引入 --- */
 @import url('https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap');
 
-/* 凤凰点阵体 - CC0 免费中文像素字体 */
+/* Zpix 中文像素字体 - jsDelivr CDN */
 @font-face {
-  font-family: 'Fenghuang';
-  src: url('https://raw.githubusercontent.com/Steve-Yuu/VonwaonBitmap/main/fonts/16px/VonwaonBitmap-16px.woff2') format('woff2');
+  font-family: 'Zpix';
+  src: url('https://cdn.jsdelivr.net/npm/zpix@3.1.0/dist/Zpix.woff2') format('woff2');
   font-display: swap;
 }
 
@@ -24,7 +24,7 @@
   --color-link: #b8a88a;
 
   /* 字体 */
-  --font-pixel: 'Fenghuang', 'Press Start 2P', monospace;
+  --font-pixel: 'Zpix', 'Press Start 2P', monospace;
   --font-code: 'Fira Code', 'Courier New', monospace;
 
   /* 间距 */

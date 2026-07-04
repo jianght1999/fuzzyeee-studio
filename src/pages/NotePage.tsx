@@ -4,15 +4,13 @@ import { categories } from '../data/categories';
 import { useMarkdownPages } from '../hooks/useMarkdownPages';
 import { useAuth } from '../contexts/AuthContext';
 import Sidebar from '../components/Sidebar/Sidebar';
-import MarkdownRenderer from '../components/MarkdownRenderer/MarkdownRenderer';
-import MarkdownEditor from '../components/MarkdownEditor/MarkdownEditor';
 import RichTextEditor from '../components/RichTextEditor/RichTextEditor';
 import HtmlRenderer from '../components/HtmlRenderer/HtmlRenderer';
 import LoginModal from '../components/LoginModal/LoginModal';
 import styles from './NotePage.module.css';
 
 const FONT_OPTIONS = [
-  { label: 'Pixel', value: "'Fenghuang', 'Press Start 2P', monospace" },
+  { label: 'Pixel', value: "'Zpix', 'Press Start 2P', monospace" },
   { label: 'Mono', value: "'Fira Code', 'Courier New', monospace" },
   { label: 'Serif', value: "Georgia, 'Times New Roman', serif" },
   { label: 'Sans', value: "system-ui, sans-serif" },
@@ -69,9 +67,8 @@ export default function NotePage() {
     ? (editedContent[activePage.slug] ?? activePage.content)
     : '';
 
-  const fileExt = activePage?.type === 'html' ? '.html' : '.md';
   const filePath = activePage
-    ? `src/content/${category}/${activePage.slug}${fileExt}`
+    ? `src/content/${category}/${activePage.slug}.html`
     : '';
 
   const handleReorder = async (slugs: string[], parentSlug: string | null) => {
@@ -100,13 +97,14 @@ export default function NotePage() {
     const dir = parentSlug ? `${category}/${parentSlug}` : category;
     const path = `src/content/${dir}/${name}.html`;
     const ok = await createPage(path, `<h1>${name}</h1>\n<p></p>`);
-    if (ok) window.location.reload();
+    if (ok) {
+      if (parentSlug) sessionStorage.setItem('pixel_expand', parentSlug);
+      window.location.reload();
+    }
   };
 
   const handleDeletePage = async (slug: string) => {
-    const page = sortedPages.find(p => p.slug === slug);
-    const ext = page?.type === 'html' ? '.html' : '.md';
-    const path = `src/content/${category}/${slug}${ext}`;
+    const path = `src/content/${category}/${slug}.html`;
     const ok = await deletePage(path);
     if (ok) window.location.reload();
   };
@@ -115,19 +113,9 @@ export default function NotePage() {
     const page = sortedPages.find(p => p.slug === oldSlug);
     if (!page) return;
     const oldContent = editedContent[oldSlug] ?? page.content;
-    let newContent: string;
-    if (page.type === 'html') {
-      newContent = oldContent.replace(/<h1[^>]*>.*?<\/h1>/i, `<h1>${newName}</h1>`);
-      if (!/<h1/i.test(newContent)) newContent = `<h1>${newName}</h1>\n${newContent}`;
-    } else {
-      if (oldContent.match(/^#\s+.+$/m)) {
-        newContent = oldContent.replace(/^#\s+.+$/m, `# ${newName}`);
-      } else {
-        newContent = `# ${newName}\n\n${oldContent}`;
-      }
-    }
-    const ext = page.type === 'html' ? '.html' : '.md';
-    const fp = `src/content/${category}/${oldSlug}${ext}`;
+    let newContent = oldContent.replace(/<h1[^>]*>.*?<\/h1>/i, `<h1>${newName}</h1>`);
+    if (!/<h1/i.test(newContent)) newContent = `<h1>${newName}</h1>\n${newContent}`;
+    const fp = `src/content/${category}/${oldSlug}.html`;
     const ok = await saveMarkdown(fp, newContent);
     if (ok) {
       setEditedContent(prev => ({ ...prev, [oldSlug]: newContent }));
@@ -220,27 +208,14 @@ export default function NotePage() {
 
           {activePage ? (
             editing ? (
-              activePage.type === 'html' ? (
-                <RichTextEditor
-                  content={displayContent}
-                  filePath={filePath}
-                  onSave={handleSave}
-                  onCancel={() => setEditing(false)}
-                />
-              ) : (
-                <MarkdownEditor
-                  content={displayContent}
-                  filePath={filePath}
-                  onSave={handleSave}
-                  onCancel={() => setEditing(false)}
-                />
-              )
+              <RichTextEditor
+                content={displayContent}
+                filePath={filePath}
+                onSave={handleSave}
+                onCancel={() => setEditing(false)}
+              />
             ) : (
-              activePage.type === 'html' ? (
-                <HtmlRenderer content={displayContent} viewFont={viewFont} viewSize={viewSize} />
-              ) : (
-                <MarkdownRenderer content={displayContent} viewFont={viewFont} viewSize={viewSize} />
-              )
+              <HtmlRenderer content={displayContent} viewFont={viewFont} viewSize={viewSize} />
             )
           ) : (
             <p className={styles.emptyHint}>请从左侧目录选择一篇笔记</p>

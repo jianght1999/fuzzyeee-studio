@@ -29,6 +29,15 @@ export default function Sidebar({
   const [renameValue, setRenameValue] = useState('');
   const [dragOver, setDragOver] = useState<string | null>(null);
 
+  // Auto-expand parent after adding sub-page
+  useEffect(() => {
+    const expandSlug = sessionStorage.getItem('pixel_expand');
+    if (expandSlug) {
+      sessionStorage.removeItem('pixel_expand');
+      setExpanded(prev => new Set([...prev, expandSlug]));
+    }
+  }, []);
+
   useEffect(() => {
     document.body.style.overflow = mobileOpen ? 'hidden' : '';
     return () => { document.body.style.overflow = ''; };
@@ -74,10 +83,15 @@ export default function Sidebar({
   const handleDragOver = (e: React.DragEvent, slug: string) => {
     e.preventDefault();
     e.dataTransfer.dropEffect = 'move';
-    setDragOver(slug);
+    // Only show indicator on items different from the dragged one
+    const dragged = e.dataTransfer.getData('text/plain');
+    if (dragged && dragged !== slug) setDragOver(slug);
   };
 
-  const handleDragLeave = () => setDragOver(null);
+  const handleDragLeave = (e: React.DragEvent) => {
+    // Only clear if we're leaving the element (not entering a child)
+    if (e.currentTarget === e.target) setDragOver(null);
+  };
 
   const handleDrop = (e: React.DragEvent, targetSlug: string, parentSlug: string | null) => {
     e.preventDefault();
@@ -90,7 +104,6 @@ export default function Sidebar({
     const slugs = siblings.map(p => p.slug.replace(/^.*\//, ''));
     const draggedName = draggedSlug.replace(/^.*\//, '');
     const targetName = targetSlug.replace(/^.*\//, '');
-    // Remove dragged from current position, insert before target
     const fromIdx = slugs.indexOf(draggedName);
     const toIdx = slugs.indexOf(targetName);
     if (fromIdx === -1 || toIdx === -1) return;
