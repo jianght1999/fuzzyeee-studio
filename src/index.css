@@ -3,12 +3,8 @@
 /* --- 字体引入 --- */
 @import url('https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap');
 
-/* Zpix 中文像素字体 - jsDelivr CDN */
-@font-face {
-  font-family: 'Zpix';
-  src: url('https://cdn.jsdelivr.net/npm/zpix@3.1.0/dist/Zpix.woff2') format('woff2');
-  font-display: swap;
-}
+/* 霞鹜文楷 - 手写风格中文字体，jsDelivr CDN */
+@import url('https://cdn.jsdelivr.net/npm/lxgw-wenkai-webfont@1.7.0/style.css');
 
 /* --- CSS 变量 --- */
 :root {
@@ -24,7 +20,7 @@
   --color-link: #b8a88a;
 
   /* 字体 */
-  --font-pixel: 'Zpix', 'Press Start 2P', monospace;
+  --font-pixel: 'LXGW WenKai', 'Press Start 2P', monospace;
   --font-code: 'Fira Code', 'Courier New', monospace;
 
   /* 间距 */
@@ -68,8 +64,6 @@
 
 html {
   font-size: 16px;
-  -webkit-font-smoothing: none;
-  -moz-osx-font-smoothing: unset;
 }
 
 body {

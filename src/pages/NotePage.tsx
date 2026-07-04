@@ -11,7 +11,7 @@ import LoginModal from '../components/LoginModal/LoginModal';
 import styles from './NotePage.module.css';
 
 const FONT_OPTIONS = [
-  { label: 'Pixel', value: "'Zpix', 'Press Start 2P', monospace" },
+  { label: 'WenKai', value: "'LXGW WenKai', 'Press Start 2P', monospace" },
   { label: 'Mono', value: "'Fira Code', 'Courier New', monospace" },
   { label: 'Serif', value: "Georgia, 'Times New Roman', serif" },
   { label: 'Sans', value: "system-ui, sans-serif" },
