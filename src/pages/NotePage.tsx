@@ -6,6 +6,8 @@ import { useAuth } from '../contexts/AuthContext';
 import Sidebar from '../components/Sidebar/Sidebar';
 import MarkdownRenderer from '../components/MarkdownRenderer/MarkdownRenderer';
 import MarkdownEditor from '../components/MarkdownEditor/MarkdownEditor';
+import RichTextEditor from '../components/RichTextEditor/RichTextEditor';
+import HtmlRenderer from '../components/HtmlRenderer/HtmlRenderer';
 import LoginModal from '../components/LoginModal/LoginModal';
 import styles from './NotePage.module.css';
 
@@ -67,8 +69,9 @@ export default function NotePage() {
     ? (editedContent[activePage.slug] ?? activePage.content)
     : '';
 
+  const fileExt = activePage?.type === 'html' ? '.html' : '.md';
   const filePath = activePage
-    ? `src/content/${category}/${activePage.slug}.md`
+    ? `src/content/${category}/${activePage.slug}${fileExt}`
     : '';
 
   const handleNavigate = (slug: string, headingId?: string) => {
@@ -89,15 +92,17 @@ export default function NotePage() {
 
   // --- Sidebar CRUD ---
   const handleAddPage = async (name: string) => {
-    const path = `src/content/${category}/${name}.md`;
-    const ok = await createPage(path);
+    const path = `src/content/${category}/${name}.html`;
+    const ok = await createPage(path, `<h1>${name}</h1>\n<p></p>`);
     if (ok) {
       window.location.reload();
     }
   };
 
   const handleDeletePage = async (slug: string) => {
-    const path = `src/content/${category}/${slug}.md`;
+    const page = sortedPages.find(p => p.slug === slug);
+    const ext = page?.type === 'html' ? '.html' : '.md';
+    const path = `src/content/${category}/${slug}${ext}`;
     const ok = await deletePage(path);
     if (ok) {
       window.location.reload();
@@ -109,12 +114,20 @@ export default function NotePage() {
     if (!page) return;
     const oldContent = editedContent[oldSlug] ?? page.content;
     let newContent: string;
-    if (oldContent.match(/^#\s+.+$/m)) {
-      newContent = oldContent.replace(/^#\s+.+$/m, `# ${newName}`);
+    if (page.type === 'html') {
+      newContent = oldContent.replace(/<h1[^>]*>.*?<\/h1>/i, `<h1>${newName}</h1>`);
+      if (!/<h1/i.test(newContent)) {
+        newContent = `<h1>${newName}</h1>\n${newContent}`;
+      }
     } else {
-      newContent = `# ${newName}\n\n${oldContent}`;
+      if (oldContent.match(/^#\s+.+$/m)) {
+        newContent = oldContent.replace(/^#\s+.+$/m, `# ${newName}`);
+      } else {
+        newContent = `# ${newName}\n\n${oldContent}`;
+      }
     }
-    const filePath = `src/content/${category}/${oldSlug}.md`;
+    const ext = page.type === 'html' ? '.html' : '.md';
+    const filePath = `src/content/${category}/${oldSlug}${ext}`;
     const ok = await saveMarkdown(filePath, newContent);
     if (ok) {
       setEditedContent(prev => ({ ...prev, [oldSlug]: newContent }));
@@ -207,14 +220,27 @@ export default function NotePage() {
 
           {activePage ? (
             editing ? (
-              <MarkdownEditor
-                content={displayContent}
-                filePath={filePath}
-                onSave={handleSave}
-                onCancel={() => setEditing(false)}
-              />
+              activePage.type === 'html' ? (
+                <RichTextEditor
+                  content={displayContent}
+                  filePath={filePath}
+                  onSave={handleSave}
+                  onCancel={() => setEditing(false)}
+                />
+              ) : (
+                <MarkdownEditor
+                  content={displayContent}
+                  filePath={filePath}
+                  onSave={handleSave}
+                  onCancel={() => setEditing(false)}
+                />
+              )
             ) : (
-              <MarkdownRenderer content={displayContent} viewFont={viewFont} viewSize={viewSize} />
+              activePage.type === 'html' ? (
+                <HtmlRenderer content={displayContent} viewFont={viewFont} viewSize={viewSize} />
+              ) : (
+                <MarkdownRenderer content={displayContent} viewFont={viewFont} viewSize={viewSize} />
+              )
             )
           ) : (
             <p className={styles.emptyHint}>请从左侧目录选择一篇笔记</p>

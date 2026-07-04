@@ -6,7 +6,7 @@ interface AuthContextType {
   login: (password: string) => Promise<boolean>;
   logout: () => void;
   saveMarkdown: (filePath: string, content: string) => Promise<boolean>;
-  createPage: (filePath: string) => Promise<boolean>;
+  createPage: (filePath: string, initialContent?: string) => Promise<boolean>;
   deletePage: (filePath: string) => Promise<boolean>;
   renamePage: (oldPath: string, newPath: string) => Promise<boolean>;
 }
@@ -83,8 +83,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     return apiPost('/api/save', { path: filePath, content });
   }, [apiPost]);
 
-  const createPage = useCallback(async (filePath: string): Promise<boolean> => {
-    return apiPost('/api/create-page', { path: filePath, content: '# New Page\n\n' });
+  const createPage = useCallback(async (filePath: string, initialContent?: string): Promise<boolean> => {
+    return apiPost('/api/create-page', { path: filePath, content: initialContent || '# New Page\n\n' });
   }, [apiPost]);
 
   const deletePage = useCallback(async (filePath: string): Promise<boolean> => {

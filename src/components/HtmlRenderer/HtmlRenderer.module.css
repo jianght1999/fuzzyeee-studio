@@ -1,0 +1,39 @@
+.renderer {
+  font-family: var(--view-font, var(--font-pixel));
+  font-size: var(--view-size, 16px);
+  line-height: 1.8;
+  color: var(--color-text);
+  max-width: 720px;
+}
+
+.renderer h1 {
+  font-family: var(--view-font, var(--font-pixel));
+  font-size: calc(var(--view-size, 16px) * 1.5);
+  color: var(--color-highlight);
+  margin: 28px 0 14px;
+  padding-bottom: 8px;
+  border-bottom: 4px solid var(--color-border);
+}
+
+.renderer h2 {
+  font-family: var(--view-font, var(--font-pixel));
+  font-size: calc(var(--view-size, 16px) * 1.25);
+  color: var(--color-highlight);
+  margin: 24px 0 10px;
+}
+
+.renderer h3 {
+  font-family: var(--view-font, var(--font-pixel));
+  font-size: calc(var(--view-size, 16px) * 1.125);
+  color: var(--color-highlight-alt);
+  margin: 20px 0 8px;
+}
+
+.renderer img {
+  max-width: 100%;
+  image-rendering: pixelated;
+}
+
+.renderer strong, .renderer b {
+  color: var(--color-highlight);
+}
