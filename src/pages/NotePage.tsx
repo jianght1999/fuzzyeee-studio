@@ -90,8 +90,8 @@ export default function NotePage() {
     <div className={styles.page}>
       {/* 顶部栏 */}
       <header className={styles.topBar}>
-        <Link to="/" className={styles.backLink}>
-          ← 返回
+        <Link to="/" className={styles.backLink} title="返回首页">
+          ◀
         </Link>
         <h1 className={styles.categoryTitle}>
           {categoryInfo.title}

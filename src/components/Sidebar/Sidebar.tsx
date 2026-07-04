@@ -44,9 +44,6 @@ export default function Sidebar({
 
   const sidebarContent = (
     <>
-      <div className={styles.header}>
-        <span>📑 目录</span>
-      </div>
       <div className={styles.list}>
         {pages.map((page) => {
           const headingData = headingsByPage.find(h => h.pageSlug === page.slug);
