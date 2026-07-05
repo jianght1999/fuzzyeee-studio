@@ -172,9 +172,9 @@ export default function RichTextEditor({ content, filePath, onSave, onCancel, on
             reader.onload = () => {
               // Build a centered, resizable image block
               const uid = 'img_' + Date.now();
-              const html = `<div contenteditable="false" style="display:block;margin:16px auto;position:relative;max-width:100%;min-width:40px;text-align:center;" id="${uid}">
+              const html = `<div style="display:block;margin:16px auto;position:relative;max-width:100%;min-width:40px;text-align:center;" id="${uid}">
                 <img src="${reader.result}" style="display:block;width:100%;height:auto;max-width:100%;" />
-                <span style="position:absolute;right:0;bottom:0;width:12px;height:12px;background:var(--color-highlight);cursor:nwse-resize;border:2px solid #000;z-index:5;" data-resize="${uid}"></span>
+                <span contenteditable="false" style="position:absolute;right:0;bottom:0;width:12px;height:12px;background:var(--color-highlight);cursor:nwse-resize;border:2px solid #000;z-index:5;" data-resize="${uid}"></span>
               </div>`;
               editorRef.current?.focus();
               document.execCommand('insertHTML', false, html);
@@ -210,7 +210,7 @@ export default function RichTextEditor({ content, filePath, onSave, onCancel, on
           const sel = window.getSelection();
           const el = sel?.anchorNode?.parentElement;
           // Find the closest resizable wrapper or img
-          const wrapper = el?.closest?.('div[contenteditable="false"]') as HTMLElement || el?.closest?.('img') as HTMLElement;
+          const wrapper = el?.closest?.('div[id^="img_"]') as HTMLElement || el?.closest?.('img') as HTMLElement;
           if (wrapper) {
             wrapper.style.float = wrapper.style.float === 'left' ? 'none' : 'left';
             wrapper.style.margin = wrapper.style.float === 'left' ? '0 16px 8px 0' : '0';

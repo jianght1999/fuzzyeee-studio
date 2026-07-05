@@ -93,11 +93,11 @@
   display: block;
 }
 
-.editable div[contenteditable="false"] {
+.editable div[id^="img_"] {
   cursor: default;
 }
 
-.editable div[contenteditable="false"]:hover {
+.editable div[id^="img_"]:hover {
   outline: 2px dashed var(--color-highlight);
 }
 
