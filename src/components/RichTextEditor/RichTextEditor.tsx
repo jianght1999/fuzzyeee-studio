@@ -172,16 +172,18 @@ export default function RichTextEditor({ content, filePath, onSave, onCancel, on
     }
   };
 
-  // On Backspace/Delete: fully remove selected image wrapper
+  // On Backspace/Delete: fully remove selected image or wrapper
   const handleKeyDown = (e: React.KeyboardEvent) => {
     if (e.key !== 'Backspace' && e.key !== 'Delete') return;
     const sel = window.getSelection();
     if (!sel?.rangeCount) return;
     const node = sel.anchorNode;
-    const wrapper = (node as HTMLElement)?.closest?.('div[id^="img_"]') as HTMLElement;
-    if (wrapper) {
+    // Check for wrapper or bare img
+    const target = (node as HTMLElement)?.closest?.('div[id^="img_"]') as HTMLElement
+               || (node as HTMLElement)?.closest?.('img') as HTMLElement;
+    if (target) {
       e.preventDefault();
-      wrapper.remove();
+      target.remove();
     }
   };
 
