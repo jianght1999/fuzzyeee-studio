@@ -91,6 +91,20 @@ export default function RichTextEditor({ content, filePath, onSave, onCancel, on
   // Use <font size=N> (no styleWithCSS) — CSS overrides exact pixel sizes
   const sizeToFont: Record<string, string> = { '10px': '2', '20px': '5', '30px': '6', '40px': '7' };
   const applyFontSize = (size: string) => {
+    // Unwrap any existing <font size> around the selection to prevent nesting
+    const sel = window.getSelection();
+    if (sel?.rangeCount && !sel.isCollapsed) {
+      let node: Node | null = sel.getRangeAt(0).commonAncestorContainer;
+      while (node && node !== editorRef.current) {
+        if (node.nodeName === 'FONT' && (node as HTMLElement).hasAttribute('size')) {
+          const p = node.parentNode;
+          while (node.firstChild) p?.insertBefore(node.firstChild, node);
+          p?.removeChild(node);
+          break;
+        }
+        node = node.parentNode;
+      }
+    }
     exec('fontSize', sizeToFont[size] || '5');
   };
 
