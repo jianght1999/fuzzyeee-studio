@@ -143,7 +143,20 @@ export default function NotePage() {
   return (
     <div className={styles.page}>
       <header className={styles.topBar}>
-        <Link to="/" className={styles.backLink} title="返回首页">
+        <Link
+          to="/"
+          className={styles.backLink}
+          title="返回首页"
+          onClick={(e) => {
+            if (editorDirtyRef.current) {
+              if (!window.confirm('you have unsaved changes. discard and go back?')) {
+                e.preventDefault();
+              } else {
+                editorDirtyRef.current = false;
+              }
+            }
+          }}
+        >
           ◀
         </Link>
         <h1 className={styles.categoryTitle}>

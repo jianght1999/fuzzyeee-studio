@@ -18,7 +18,7 @@ interface RichTextEditorProps {
   onHasChanges?: (dirty: boolean) => void;
 }
 
-/** Wrap selection in a styled span — works around execCommand limitations */
+/** Wrap selection in a styled span — handles cross-element selections */
 function wrapSelection(style: string) {
   const sel = window.getSelection();
   if (!sel || !sel.rangeCount || sel.isCollapsed) return;
@@ -28,8 +28,10 @@ function wrapSelection(style: string) {
   try {
     range.surroundContents(span);
   } catch {
-    // If selection crosses element boundaries, fall back to execCommand
-    document.execCommand('fontSize', false, '3');
+    // Selection crosses element boundaries — extract, wrap, re-insert
+    const frag = range.extractContents();
+    span.appendChild(frag);
+    range.insertNode(span);
   }
   sel.removeAllRanges();
 }
@@ -149,6 +151,7 @@ export default function RichTextEditor({ content, filePath, onSave, onCancel, on
         className={styles.editable}
         contentEditable
         suppressContentEditableWarning
+        onInput={() => onHasChanges?.(isDirty())}
       />
     </div>
   );
