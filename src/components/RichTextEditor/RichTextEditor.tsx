@@ -18,23 +18,6 @@ interface RichTextEditorProps {
   onHasChanges?: (dirty: boolean) => void;
 }
 
-/** Wrap selection in a styled span — cloneContents + deleteContents + insertHTML (no DOM breakage) */
-function wrapWithSpan(style: string) {
-  const sel = window.getSelection();
-  if (!sel || !sel.rangeCount || sel.isCollapsed) return;
-  const range = sel.getRangeAt(0);
-  const frag = range.cloneContents();
-  const tmp = document.createElement('div');
-  tmp.appendChild(frag);
-  const html = tmp.innerHTML;
-  if (!html) return;
-  range.deleteContents();
-  const span = document.createElement('span');
-  span.setAttribute('style', style);
-  span.innerHTML = html;
-  range.insertNode(span);
-}
-
 export default function RichTextEditor({ content, filePath, onSave, onCancel, onHasChanges }: RichTextEditorProps) {
   const { saveMarkdown } = useAuth();
   const editorRef = useRef<HTMLDivElement>(null);
@@ -71,24 +54,45 @@ export default function RichTextEditor({ content, filePath, onSave, onCancel, on
   };
 
   const applyFontSize = (size: string) => {
-    wrapWithSpan(`font-size:${size}`);
+    const sel = window.getSelection();
+    if (!sel?.rangeCount || sel.isCollapsed) { editorRef.current?.focus(); return; }
+    const range = sel.getRangeAt(0);
+    // Extract, strip old font-size spans, wrap in new span, insert — all at once
+    const frag = range.extractContents();
+    frag.querySelectorAll('span').forEach(s => {
+      const el = s as HTMLElement;
+      if (el.style.fontSize) { el.style.fontSize = ''; if (!el.getAttribute('style')) el.replaceWith(...el.childNodes); }
+    });
+    const wrapper = document.createElement('span');
+    wrapper.style.fontSize = size;
+    wrapper.appendChild(frag);
+    range.insertNode(wrapper);
     editorRef.current?.focus();
+  };
+
+  // Separate applyColor/resetColor — also strip old color spans first
+  const applyColor = (color: string) => {
+    const sel = window.getSelection();
+    if (!sel?.rangeCount || sel.isCollapsed) { editorRef.current?.focus(); return; }
+    const range = sel.getRangeAt(0);
+    const frag = range.extractContents();
+    frag.querySelectorAll('span').forEach(s => {
+      const el = s as HTMLElement;
+      if (el.style.color) { el.style.color = ''; if (!el.getAttribute('style')) el.replaceWith(...el.childNodes); }
+    });
+    const wrapper = document.createElement('span');
+    wrapper.style.color = color;
+    wrapper.appendChild(frag);
+    range.insertNode(wrapper);
+    editorRef.current?.focus();
+  };
+
+  const resetColor = () => {
+    applyColor('var(--color-text)');
   };
 
   const applyFont = (font: string) => {
     exec('fontName', font);
-  };
-
-  // Apply color — wraps in a span with CSS variable so theme changes take effect
-  const applyColor = (color: string) => {
-    wrapWithSpan(`color:${color}`);
-    editorRef.current?.focus();
-  };
-
-  // "Default" color — uses CSS variable that follows light/dark mode
-  const resetColor = () => {
-    wrapWithSpan('color:var(--color-text)');
-    editorRef.current?.focus();
   };
 
   const handleSave = async () => {
