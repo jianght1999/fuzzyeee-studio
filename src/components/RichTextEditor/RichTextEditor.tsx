@@ -22,6 +22,7 @@ export default function RichTextEditor({ content, filePath, onSave, onCancel, on
   const { saveMarkdown } = useAuth();
   const editorRef = useRef<HTMLDivElement>(null);
   const sizeRef = useRef<HTMLSelectElement>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
 
@@ -155,10 +156,23 @@ export default function RichTextEditor({ content, filePath, onSave, onCancel, on
         <button className="pixel-button" onClick={() => exec('italic')} title="italic"><i>I</i></button>
         <button className="pixel-button" onClick={() => exec('underline')} title="underline"><u>U</u></button>
         <span className={styles.sep} />
-        <button className="pixel-button" onClick={() => {
-          const url = window.prompt('image URL:');
-          if (url) exec('insertImage', url);
-        }} title="insert image">🖼</button>
+        <button className="pixel-button" onClick={() => fileInputRef.current?.click()} title="insert image">🖼</button>
+        <input
+          ref={fileInputRef}
+          type="file"
+          accept="image/*"
+          style={{ display: 'none' }}
+          onChange={(e) => {
+            const file = e.target.files?.[0];
+            if (!file) return;
+            const reader = new FileReader();
+            reader.onload = () => {
+              exec('insertImage', reader.result as string);
+            };
+            reader.readAsDataURL(file);
+            e.target.value = '';
+          }}
+        />
         <button className="pixel-button" onClick={() => {
           const img = editorRef.current?.querySelector('img:hover, img:focus') as HTMLImageElement || undefined;
           const selImg = window.getSelection()?.anchorNode?.parentElement?.closest?.('img');
