@@ -42,11 +42,12 @@ export default function RichTextEditor({ content, filePath, onSave, onCancel, on
     return () => window.removeEventListener('beforeunload', handler);
   }, [isDirty]);
 
-  // Set initial content only once
+  // Set initial content only once, enable native image resize handles
   useEffect(() => {
     if (editorRef.current && editorRef.current.innerHTML !== content) {
       editorRef.current.innerHTML = content;
     }
+    document.execCommand('enableObjectResizing', false, 'true');
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 

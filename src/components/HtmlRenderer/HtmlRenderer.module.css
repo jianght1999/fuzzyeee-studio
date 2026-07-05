@@ -44,6 +44,14 @@
   transform: scale(1.5);
 }
 
+.zoomed {
+  max-width: none !important;
+  transform: scale(1.5);
+  transform-origin: top center;
+  z-index: 10;
+  position: relative;
+}
+
 .renderer strong, .renderer b {
   color: var(--color-highlight);
 }
