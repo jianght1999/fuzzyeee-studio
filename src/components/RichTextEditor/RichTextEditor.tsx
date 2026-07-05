@@ -19,7 +19,7 @@ interface RichTextEditorProps {
 }
 
 export default function RichTextEditor({ content, filePath, onSave, onCancel, onHasChanges }: RichTextEditorProps) {
-  const { saveMarkdown, token: authToken } = useAuth();
+  const { token: authToken } = useAuth();
   const editorRef = useRef<HTMLDivElement>(null);
   const sizeRef = useRef<HTMLSelectElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
