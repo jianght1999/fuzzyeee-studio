@@ -5,7 +5,6 @@
   color: var(--color-text);
   max-width: 900px;
   margin: 0 auto;
-  text-align: center;
 }
 
 .renderer h1 {
@@ -37,6 +36,8 @@
   image-rendering: pixelated;
   cursor: pointer;
   transition: transform 0.1s step-end;
+  display: block;
+  margin: 12px auto;
 }
 
 .renderer img:active {
