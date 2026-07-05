@@ -168,12 +168,13 @@ export default function RichTextEditor({ content, filePath, onSave, onCancel, on
             if (!file) return;
             const reader = new FileReader();
             reader.onload = () => {
-              // Wrap in resizable container — CSS resize works on div, not img
+              // Wrap in resizable container — contenteditable=false so resize handle works
               const wrapper = document.createElement('div');
-              wrapper.setAttribute('style', 'display:inline-block;resize:both;overflow:hidden;max-width:100%;min-width:40px;min-height:40px;');
+              wrapper.setAttribute('contenteditable', 'false');
+              wrapper.setAttribute('style', 'display:inline-block;resize:both;overflow:auto;max-width:100%;min-width:40px;min-height:40px;cursor:default;');
               const img = document.createElement('img');
               img.src = reader.result as string;
-              img.setAttribute('style', 'display:block;width:100%;height:auto;');
+              img.setAttribute('style', 'display:block;width:100%;height:auto;pointer-events:none;');
               wrapper.appendChild(img);
               editorRef.current?.focus();
               document.execCommand('insertHTML', false, wrapper.outerHTML);
