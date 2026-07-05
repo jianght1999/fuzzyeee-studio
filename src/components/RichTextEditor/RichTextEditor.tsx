@@ -168,16 +168,37 @@ export default function RichTextEditor({ content, filePath, onSave, onCancel, on
             if (!file) return;
             const reader = new FileReader();
             reader.onload = () => {
-              // Wrap in resizable container — contenteditable=false so resize handle works
-              const wrapper = document.createElement('div');
-              wrapper.setAttribute('contenteditable', 'false');
-              wrapper.setAttribute('style', 'display:inline-block;resize:both;overflow:auto;max-width:100%;min-width:40px;min-height:40px;cursor:default;');
-              const img = document.createElement('img');
-              img.src = reader.result as string;
-              img.setAttribute('style', 'display:block;width:100%;height:auto;pointer-events:none;');
-              wrapper.appendChild(img);
+              // Build a resizable image block with JS drag handle
+              const uid = 'img_' + Date.now();
+              const html = `<div contenteditable="false" style="display:inline-block;position:relative;max-width:100%;min-width:40px;" id="${uid}">
+                <img src="${reader.result}" style="display:block;width:100%;height:auto;pointer-events:none;" />
+                <span style="position:absolute;right:0;bottom:0;width:12px;height:12px;background:var(--color-highlight);cursor:nwse-resize;border:2px solid #000;z-index:5;" data-resize="${uid}"></span>
+              </div>`;
               editorRef.current?.focus();
-              document.execCommand('insertHTML', false, wrapper.outerHTML);
+              document.execCommand('insertHTML', false, html);
+              // Attach resize logic
+              setTimeout(() => {
+                const el = editorRef.current?.querySelector(`#${uid}`) as HTMLElement;
+                const handle = el?.querySelector('[data-resize]') as HTMLElement;
+                if (!el || !handle) return;
+                const img = el.querySelector('img')!;
+                let startX = 0, startW = 0;
+                handle.onmousedown = (ev) => {
+                  ev.preventDefault(); ev.stopPropagation();
+                  startX = ev.clientX; startW = el.offsetWidth;
+                  const onMove = (e: MouseEvent) => {
+                    const w = Math.max(40, startW + e.clientX - startX);
+                    el.style.width = w + 'px';
+                    img.style.width = '100%';
+                  };
+                  const onUp = () => {
+                    document.removeEventListener('mousemove', onMove);
+                    document.removeEventListener('mouseup', onUp);
+                  };
+                  document.addEventListener('mousemove', onMove);
+                  document.addEventListener('mouseup', onUp);
+                };
+              }, 50);
             };
             reader.readAsDataURL(file);
             e.target.value = '';
@@ -187,7 +208,7 @@ export default function RichTextEditor({ content, filePath, onSave, onCancel, on
           const sel = window.getSelection();
           const el = sel?.anchorNode?.parentElement;
           // Find the closest resizable wrapper or img
-          const wrapper = el?.closest?.('div[style*="resize"]') as HTMLElement || el?.closest?.('img') as HTMLElement;
+          const wrapper = el?.closest?.('div[contenteditable="false"]') as HTMLElement || el?.closest?.('img') as HTMLElement;
           if (wrapper) {
             wrapper.style.float = wrapper.style.float === 'left' ? 'none' : 'left';
             wrapper.style.margin = wrapper.style.float === 'left' ? '0 16px 8px 0' : '0';

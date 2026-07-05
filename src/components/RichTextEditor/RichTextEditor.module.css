@@ -93,11 +93,11 @@
   display: block;
 }
 
-.editable div[style*="resize"] {
-  cursor: pointer;
+.editable div[contenteditable="false"] {
+  cursor: default;
 }
 
-.editable div[style*="resize"]:hover {
+.editable div[contenteditable="false"]:hover {
   outline: 2px dashed var(--color-highlight);
 }
 
