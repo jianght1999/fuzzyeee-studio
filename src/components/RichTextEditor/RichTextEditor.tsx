@@ -18,16 +18,20 @@ interface RichTextEditorProps {
   onHasChanges?: (dirty: boolean) => void;
 }
 
-/** Wrap selected content in a styled span — always uses extract+insert (reliable) */
+/** Wrap selection in a styled span — cloneContents + deleteContents + insertHTML (no DOM breakage) */
 function wrapWithSpan(style: string) {
   const sel = window.getSelection();
   if (!sel || !sel.rangeCount || sel.isCollapsed) return;
   const range = sel.getRangeAt(0);
-  if (range.toString().length === 0) return;
+  const frag = range.cloneContents();
+  const tmp = document.createElement('div');
+  tmp.appendChild(frag);
+  const html = tmp.innerHTML;
+  if (!html) return;
+  range.deleteContents();
   const span = document.createElement('span');
   span.setAttribute('style', style);
-  const frag = range.extractContents();
-  span.appendChild(frag);
+  span.innerHTML = html;
   range.insertNode(span);
 }
 
