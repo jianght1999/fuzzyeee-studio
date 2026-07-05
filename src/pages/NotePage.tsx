@@ -1,5 +1,5 @@
 import { useParams, Link } from 'react-router-dom';
-import { useState, useMemo, useEffect, useCallback } from 'react';
+import { useState, useMemo, useEffect, useCallback, useRef } from 'react';
 import { categories } from '../data/categories';
 import { useMarkdownPages } from '../hooks/useMarkdownPages';
 import { useAuth } from '../contexts/AuthContext';
@@ -17,6 +17,7 @@ export default function NotePage() {
   const [editedContent, setEditedContent] = useState<Record<string, string>>({});
   const [orderOverrides, setOrderOverrides] = useState<Record<string, string[]>>({});
   const [showLogin, setShowLogin] = useState(false);
+  const editorDirtyRef = useRef(false);
 
   const { isLoggedIn, logout, createPage, deletePage, saveMarkdown, token } = useAuth();
   const { theme, toggle: toggleTheme } = useTheme();
@@ -79,6 +80,14 @@ export default function NotePage() {
         body: JSON.stringify({ token, path: orderPath, content: JSON.stringify(slugs, null, 2) }),
       });
     } catch { /* ignore */ }
+  };
+
+  const handleSidebarNavigate = (slug: string) => {
+    if (editorDirtyRef.current && slug !== activeSlug) {
+      if (!window.confirm('you have unsaved changes. discard and switch page?')) return;
+      editorDirtyRef.current = false;
+    }
+    setActiveSlug(slug);
   };
 
   const handleSave = useCallback((newContent: string) => {
@@ -163,7 +172,7 @@ export default function NotePage() {
         <Sidebar
           pages={sortedPages}
           activeSlug={activeSlug}
-          onNavigate={setActiveSlug}
+          onNavigate={handleSidebarNavigate}
           isLoggedIn={isLoggedIn}
           onAddPage={handleAddPage}
           onDeletePage={handleDeletePage}
@@ -178,7 +187,8 @@ export default function NotePage() {
                 content={displayContent}
                 filePath={filePath}
                 onSave={handleSave}
-                onCancel={() => setEditing(false)}
+                onCancel={() => { editorDirtyRef.current = false; setEditing(false); }}
+                onHasChanges={(dirty) => { editorDirtyRef.current = dirty; }}
               />
             ) : (
               <HtmlRenderer content={displayContent} />

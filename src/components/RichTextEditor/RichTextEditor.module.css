@@ -34,6 +34,7 @@
 .colorGroup {
   display: flex;
   gap: 4px;
+  align-items: center;
 }
 
 .colorBtn {
@@ -47,6 +48,24 @@
 .colorBtn:hover {
   border-color: var(--color-highlight);
   transform: scale(1.2);
+}
+
+.colorBtnAuto {
+  width: 28px;
+  height: 20px;
+  border: 2px solid var(--color-border);
+  cursor: pointer;
+  padding: 0;
+  font-family: var(--font-pixel);
+  font-size: 9px;
+  background: var(--color-card-bg);
+  color: var(--color-text-dim);
+  line-height: 1;
+}
+
+.colorBtnAuto:hover {
+  border-color: var(--color-highlight);
+  color: var(--color-highlight);
 }
 
 .editable {

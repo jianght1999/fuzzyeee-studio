@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect } from 'react';
+import { useState, useRef, useEffect, useCallback } from 'react';
 import { useAuth } from '../../contexts/AuthContext';
 import styles from './RichTextEditor.module.css';
 
@@ -8,22 +8,55 @@ const FONTS = [
 ];
 
 const SIZES = ['10px', '20px', '30px', '40px'];
-const COLORS = ['#333', '#555', '#888', '#b8a88a', '#c44', '#48b', '#494', '#000'];
+const COLORS = ['#333', '#555', '#888', '#b8a88a', '#c44', '#48b', '#494'];
 
 interface RichTextEditorProps {
   content: string;
   filePath: string;
   onSave: (newContent: string) => void;
   onCancel: () => void;
+  onHasChanges?: (dirty: boolean) => void;
 }
 
-export default function RichTextEditor({ content, filePath, onSave, onCancel }: RichTextEditorProps) {
+/** Wrap selection in a styled span — works around execCommand limitations */
+function wrapSelection(style: string) {
+  const sel = window.getSelection();
+  if (!sel || !sel.rangeCount || sel.isCollapsed) return;
+  const range = sel.getRangeAt(0);
+  const span = document.createElement('span');
+  span.setAttribute('style', style);
+  try {
+    range.surroundContents(span);
+  } catch {
+    // If selection crosses element boundaries, fall back to execCommand
+    document.execCommand('fontSize', false, '3');
+  }
+  sel.removeAllRanges();
+}
+
+export default function RichTextEditor({ content, filePath, onSave, onCancel, onHasChanges }: RichTextEditorProps) {
   const { saveMarkdown } = useAuth();
   const editorRef = useRef<HTMLDivElement>(null);
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
 
-  // Set initial content only once, then let contentEditable manage itself
+  const isDirty = useCallback(() => {
+    return editorRef.current?.innerHTML !== content;
+  }, [content]);
+
+  // Warn on page close if unsaved
+  useEffect(() => {
+    const handler = (e: BeforeUnloadEvent) => {
+      if (isDirty()) {
+        e.preventDefault();
+        e.returnValue = '';
+      }
+    };
+    window.addEventListener('beforeunload', handler);
+    return () => window.removeEventListener('beforeunload', handler);
+  }, [isDirty]);
+
+  // Set initial content only once
   useEffect(() => {
     if (editorRef.current && editorRef.current.innerHTML !== content) {
       editorRef.current.innerHTML = content;
@@ -36,6 +69,26 @@ export default function RichTextEditor({ content, filePath, onSave, onCancel }: 
     editorRef.current?.focus();
   };
 
+  const applyFontSize = (size: string) => {
+    wrapSelection(`font-size:${size}`);
+    editorRef.current?.focus();
+  };
+
+  const applyFont = (font: string) => {
+    wrapSelection(`font-family:${font}`);
+    editorRef.current?.focus();
+  };
+
+  const applyColor = (color: string) => {
+    wrapSelection(`color:${color}`);
+    editorRef.current?.focus();
+  };
+
+  const resetColor = () => {
+    wrapSelection('color:inherit');
+    editorRef.current?.focus();
+  };
+
   const handleSave = async () => {
     if (!editorRef.current) return;
     setSaving(true);
@@ -45,13 +98,13 @@ export default function RichTextEditor({ content, filePath, onSave, onCancel }: 
     if (ok) {
       setSaved(true);
       onSave(html);
+      onHasChanges?.(false);
       setTimeout(() => setSaved(false), 2000);
     }
   };
 
   const handleCancel = () => {
-    const html = editorRef.current?.innerHTML || '';
-    if (html !== content) {
+    if (isDirty()) {
       if (!window.confirm('discard changes?')) return;
     }
     onCancel();
@@ -70,21 +123,22 @@ export default function RichTextEditor({ content, filePath, onSave, onCancel }: 
         <button className="pixel-button" onClick={() => exec('underline')} title="underline"><u>U</u></button>
       </div>
       <div className={styles.toolbar}>
-        <select className={styles.select} onChange={(e) => exec('fontName', e.target.value)} defaultValue="">
-          <option value="" disabled>font</option>
+        <select className={styles.select} onChange={(e) => { if (e.target.value) applyFont(e.target.value); e.target.value = ''; }}>
+          <option value="">font</option>
           {FONTS.map(f => <option key={f.label} value={f.value}>{f.label}</option>)}
         </select>
-        <select className={styles.select} onChange={(e) => exec('fontSize', e.target.value)} defaultValue="">
-          <option value="" disabled>size</option>
+        <select className={styles.select} onChange={(e) => { if (e.target.value) applyFontSize(e.target.value); e.target.value = ''; }}>
+          <option value="">size</option>
           {SIZES.map(s => <option key={s} value={s}>{s}</option>)}
         </select>
         <span className={styles.colorGroup}>
+          <button className={styles.colorBtnAuto} onClick={resetColor} title="default">auto</button>
           {COLORS.map(c => (
             <button
               key={c}
               className={styles.colorBtn}
               style={{ backgroundColor: c }}
-              onClick={() => exec('foreColor', c)}
+              onClick={() => applyColor(c)}
               title={c}
             />
           ))}
