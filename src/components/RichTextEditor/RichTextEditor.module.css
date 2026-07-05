@@ -89,3 +89,12 @@
 .editable h1 { font-size: 2em; }
 .editable h2 { font-size: 1.5em; }
 .editable h3 { font-size: 1.17em; }
+
+/* Override <font size=N> to exact pixel sizes */
+.editable font[size="1"] { font-size: 10px; }
+.editable font[size="2"] { font-size: 10px; }
+.editable font[size="3"] { font-size: 16px; }
+.editable font[size="4"] { font-size: 16px; }
+.editable font[size="5"] { font-size: 20px; }
+.editable font[size="6"] { font-size: 30px; }
+.editable font[size="7"] { font-size: 40px; }

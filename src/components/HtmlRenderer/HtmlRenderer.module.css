@@ -37,3 +37,12 @@
 .renderer strong, .renderer b {
   color: var(--color-highlight);
 }
+
+/* Make <font size=N> match the editor's exact pixel sizes */
+.renderer font[size="1"] { font-size: 10px; }
+.renderer font[size="2"] { font-size: 10px; }
+.renderer font[size="3"] { font-size: 16px; }
+.renderer font[size="4"] { font-size: 16px; }
+.renderer font[size="5"] { font-size: 20px; }
+.renderer font[size="6"] { font-size: 30px; }
+.renderer font[size="7"] { font-size: 40px; }

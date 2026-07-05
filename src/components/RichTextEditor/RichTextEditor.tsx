@@ -49,17 +49,8 @@ export default function RichTextEditor({ content, filePath, onSave, onCancel, on
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  // Update size dropdown based on current selection
-  const cssToOur = (s: string) => {
-    if (SIZES.includes(s)) return s;
-    // Map browser CSS keyword sizes back to our values
-    const m: Record<string, string> = {
-      'x-small': '10px', 'xx-small': '10px',
-      'medium': '20px',
-      'x-large': '30px', 'xx-large': '40px',
-    };
-    return m[s] || '';
-  };
+  // Update size dropdown based on current selection (looks for <font size=N>)
+  const fontSizeToOur: Record<string, string> = { '1': '10px', '2': '10px', '5': '20px', '6': '30px', '7': '40px' };
   useEffect(() => {
     const handler = () => {
       if (!sizeRef.current) return;
@@ -70,16 +61,20 @@ export default function RichTextEditor({ content, filePath, onSave, onCancel, on
       }
       const range = sel.getRangeAt(0);
       const frag = range.cloneContents();
-      const spans = frag.querySelectorAll('span');
+      const fonts = frag.querySelectorAll('font[size]');
       const sizes = new Set<string>();
-      spans.forEach(s => {
+      fonts.forEach(f => {
+        const sz = (f as HTMLElement).getAttribute('size');
+        if (sz) sizes.add(sz);
+      });
+      // Also check spans with font-size style (from old content)
+      frag.querySelectorAll('span').forEach(s => {
         const fs = (s as HTMLElement).style.fontSize;
         if (fs) sizes.add(fs);
       });
-      if (sizes.size === 0) {
-        sizeRef.current.value = '';
-      } else if (sizes.size === 1) {
-        sizeRef.current.value = cssToOur([...sizes][0].toLowerCase());
+      if (sizes.size === 1) {
+        const val = [...sizes][0];
+        sizeRef.current.value = fontSizeToOur[val] || (SIZES.includes(val) ? val : '');
       } else {
         sizeRef.current.value = '';
       }
@@ -93,11 +88,10 @@ export default function RichTextEditor({ content, filePath, onSave, onCancel, on
     editorRef.current?.focus();
   };
 
-  // HTML fontSize 1-7 → approximate CSS px (browser's native rich-text API, no DOM breakage)
-  const fontSizeMap: Record<string, string> = { '10px': '2', '20px': '4', '30px': '6', '40px': '7' };
+  // Use <font size=N> (no styleWithCSS) — CSS overrides exact pixel sizes
+  const sizeToFont: Record<string, string> = { '10px': '2', '20px': '5', '30px': '6', '40px': '7' };
   const applyFontSize = (size: string) => {
-    document.execCommand('styleWithCSS', false, 'true');
-    exec('fontSize', fontSizeMap[size] || '4');
+    exec('fontSize', sizeToFont[size] || '5');
   };
 
   const applyColor = (color: string) => {
