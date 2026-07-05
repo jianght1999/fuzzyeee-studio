@@ -19,7 +19,7 @@ interface RichTextEditorProps {
 }
 
 export default function RichTextEditor({ content, filePath, onSave, onCancel, onHasChanges }: RichTextEditorProps) {
-  const { saveMarkdown } = useAuth();
+  const { saveMarkdown, token: authToken } = useAuth();
   const editorRef = useRef<HTMLDivElement>(null);
   const sizeRef = useRef<HTMLSelectElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -168,7 +168,7 @@ export default function RichTextEditor({ content, filePath, onSave, onCancel, on
       onHasChanges?.(false);
       setTimeout(() => setSaved(false), 2000);
     } else {
-      alert('save failed. are you logged in?');
+      alert(`save failed. token=${authToken ? 'yes' : 'NO'}, file=${filePath}`);
     }
   };
 
