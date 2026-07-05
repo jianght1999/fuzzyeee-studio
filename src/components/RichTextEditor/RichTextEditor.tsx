@@ -168,19 +168,28 @@ export default function RichTextEditor({ content, filePath, onSave, onCancel, on
             if (!file) return;
             const reader = new FileReader();
             reader.onload = () => {
-              exec('insertImage', reader.result as string);
+              // Wrap in resizable container — CSS resize works on div, not img
+              const wrapper = document.createElement('div');
+              wrapper.setAttribute('style', 'display:inline-block;resize:both;overflow:hidden;max-width:100%;min-width:40px;min-height:40px;');
+              const img = document.createElement('img');
+              img.src = reader.result as string;
+              img.setAttribute('style', 'display:block;width:100%;height:auto;');
+              wrapper.appendChild(img);
+              editorRef.current?.focus();
+              document.execCommand('insertHTML', false, wrapper.outerHTML);
             };
             reader.readAsDataURL(file);
             e.target.value = '';
           }}
         />
         <button className="pixel-button" onClick={() => {
-          const img = editorRef.current?.querySelector('img:hover, img:focus') as HTMLImageElement || undefined;
-          const selImg = window.getSelection()?.anchorNode?.parentElement?.closest?.('img');
-          const target = img || selImg;
-          if (target instanceof HTMLImageElement) {
-            target.style.float = target.style.float === 'left' ? 'none' : 'left';
-            target.style.margin = target.style.float === 'left' ? '0 16px 8px 0' : '0';
+          const sel = window.getSelection();
+          const el = sel?.anchorNode?.parentElement;
+          // Find the closest resizable wrapper or img
+          const wrapper = el?.closest?.('div[style*="resize"]') as HTMLElement || el?.closest?.('img') as HTMLElement;
+          if (wrapper) {
+            wrapper.style.float = wrapper.style.float === 'left' ? 'none' : 'left';
+            wrapper.style.margin = wrapper.style.float === 'left' ? '0 16px 8px 0' : '0';
           }
         }} title="toggle float">◧</button>
       </div>

@@ -90,10 +90,14 @@
   max-width: 100%;
   cursor: pointer;
   image-rendering: pixelated;
-  display: inline-block;
+  display: block;
 }
 
-.editable img:hover {
+.editable div[style*="resize"] {
+  cursor: pointer;
+}
+
+.editable div[style*="resize"]:hover {
   outline: 2px dashed var(--color-highlight);
 }
 
