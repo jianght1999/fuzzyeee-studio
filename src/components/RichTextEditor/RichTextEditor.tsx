@@ -50,6 +50,16 @@ export default function RichTextEditor({ content, filePath, onSave, onCancel, on
   }, []);
 
   // Update size dropdown based on current selection
+  const cssToOur = (s: string) => {
+    if (SIZES.includes(s)) return s;
+    // Map browser CSS keyword sizes back to our values
+    const m: Record<string, string> = {
+      'x-small': '10px', 'xx-small': '10px',
+      'medium': '20px',
+      'x-large': '30px', 'xx-large': '40px',
+    };
+    return m[s] || '';
+  };
   useEffect(() => {
     const handler = () => {
       if (!sizeRef.current) return;
@@ -60,18 +70,16 @@ export default function RichTextEditor({ content, filePath, onSave, onCancel, on
       }
       const range = sel.getRangeAt(0);
       const frag = range.cloneContents();
-      const spans = frag.querySelectorAll('span[style*="font-size"]');
+      const spans = frag.querySelectorAll('span');
       const sizes = new Set<string>();
       spans.forEach(s => {
         const fs = (s as HTMLElement).style.fontSize;
         if (fs) sizes.add(fs);
       });
-      // Also check direct computed style if no spans
       if (sizes.size === 0) {
         sizeRef.current.value = '';
       } else if (sizes.size === 1) {
-        const val = [...sizes][0];
-        sizeRef.current.value = SIZES.includes(val) ? val : '';
+        sizeRef.current.value = cssToOur([...sizes][0].toLowerCase());
       } else {
         sizeRef.current.value = '';
       }
@@ -85,42 +93,21 @@ export default function RichTextEditor({ content, filePath, onSave, onCancel, on
     editorRef.current?.focus();
   };
 
+  // HTML fontSize 1-7 → approximate CSS px (browser's native rich-text API, no DOM breakage)
+  const fontSizeMap: Record<string, string> = { '10px': '2', '20px': '4', '30px': '6', '40px': '7' };
   const applyFontSize = (size: string) => {
-    const sel = window.getSelection();
-    if (!sel?.rangeCount || sel.isCollapsed) { editorRef.current?.focus(); return; }
-    const range = sel.getRangeAt(0);
-    // Extract, strip old font-size spans, wrap in new span, insert — all at once
-    const frag = range.extractContents();
-    frag.querySelectorAll('span').forEach(s => {
-      const el = s as HTMLElement;
-      if (el.style.fontSize) { el.style.fontSize = ''; if (!el.getAttribute('style')) el.replaceWith(...el.childNodes); }
-    });
-    const wrapper = document.createElement('span');
-    wrapper.style.fontSize = size;
-    wrapper.appendChild(frag);
-    range.insertNode(wrapper);
-    editorRef.current?.focus();
+    document.execCommand('styleWithCSS', false, 'true');
+    exec('fontSize', fontSizeMap[size] || '4');
   };
 
-  // Separate applyColor/resetColor — also strip old color spans first
   const applyColor = (color: string) => {
-    const sel = window.getSelection();
-    if (!sel?.rangeCount || sel.isCollapsed) { editorRef.current?.focus(); return; }
-    const range = sel.getRangeAt(0);
-    const frag = range.extractContents();
-    frag.querySelectorAll('span').forEach(s => {
-      const el = s as HTMLElement;
-      if (el.style.color) { el.style.color = ''; if (!el.getAttribute('style')) el.replaceWith(...el.childNodes); }
-    });
-    const wrapper = document.createElement('span');
-    wrapper.style.color = color;
-    wrapper.appendChild(frag);
-    range.insertNode(wrapper);
-    editorRef.current?.focus();
+    document.execCommand('styleWithCSS', false, 'true');
+    exec('foreColor', color);
   };
 
   const resetColor = () => {
-    applyColor('var(--color-text)');
+    document.execCommand('styleWithCSS', false, 'true');
+    exec('foreColor', 'var(--color-text)');
   };
 
   const applyFont = (font: string) => {
