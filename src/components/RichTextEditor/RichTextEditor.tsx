@@ -160,15 +160,26 @@ export default function RichTextEditor({ content, filePath, onSave, onCancel, on
     if (!editorRef.current) { alert('editor not ready'); return; }
     setSaving(true);
     const html = editorRef.current.innerHTML;
-    const ok = await saveMarkdown(filePath, html);
-    setSaving(false);
-    if (ok) {
-      setSaved(true);
-      onSave(html);
-      onHasChanges?.(false);
-      setTimeout(() => setSaved(false), 2000);
-    } else {
-      alert(`save failed. token=${authToken ? 'yes' : 'NO'}, file=${filePath}`);
+    // Direct fetch to bypass any closure issues
+    try {
+      const res = await fetch('/api/save', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ token: authToken, path: filePath, content: html }),
+      });
+      const data = await res.json();
+      setSaving(false);
+      if (data.success) {
+        setSaved(true);
+        onSave(html);
+        onHasChanges?.(false);
+        setTimeout(() => setSaved(false), 2000);
+      } else {
+        alert('save failed: ' + (data.error || 'unknown'));
+      }
+    } catch (err: any) {
+      setSaving(false);
+      alert('fetch error: ' + (err.message || String(err)));
     }
   };
 
