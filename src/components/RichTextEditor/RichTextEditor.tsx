@@ -157,7 +157,7 @@ export default function RichTextEditor({ content, filePath, onSave, onCancel, on
   };
 
   const handleSave = async () => {
-    if (!editorRef.current) return;
+    if (!editorRef.current) { alert('editor not ready'); return; }
     setSaving(true);
     const html = editorRef.current.innerHTML;
     const ok = await saveMarkdown(filePath, html);
@@ -167,6 +167,8 @@ export default function RichTextEditor({ content, filePath, onSave, onCancel, on
       onSave(html);
       onHasChanges?.(false);
       setTimeout(() => setSaved(false), 2000);
+    } else {
+      alert('save failed. are you logged in?');
     }
   };
 
