@@ -172,6 +172,29 @@ export default function RichTextEditor({ content, filePath, onSave, onCancel, on
     }
   };
 
+  // On Backspace/Delete: fully remove selected image wrapper
+  const handleKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key !== 'Backspace' && e.key !== 'Delete') return;
+    const sel = window.getSelection();
+    if (!sel?.rangeCount) return;
+    const node = sel.anchorNode;
+    const wrapper = (node as HTMLElement)?.closest?.('div[id^="img_"]') as HTMLElement;
+    if (wrapper) {
+      e.preventDefault();
+      wrapper.remove();
+    }
+  };
+
+  // Click on image wrapper → show selection outline
+  const handleClick = (e: React.MouseEvent) => {
+    const target = e.target as HTMLElement;
+    editorRef.current?.querySelectorAll('div[id^="img_"].selected').forEach(el => el.classList.remove('selected'));
+    const wrapper = target.closest?.('div[id^="img_"]') as HTMLElement;
+    if (wrapper && !target.closest?.('[data-resize]')) {
+      wrapper.classList.add('selected');
+    }
+  };
+
   const handleCancel = () => {
     if (isDirty()) {
       if (!window.confirm('discard changes?')) return;
@@ -277,6 +300,8 @@ export default function RichTextEditor({ content, filePath, onSave, onCancel, on
         contentEditable
         suppressContentEditableWarning
         onInput={() => onHasChanges?.(isDirty())}
+        onKeyDown={handleKeyDown}
+        onClick={handleClick}
       />
     </div>
   );
