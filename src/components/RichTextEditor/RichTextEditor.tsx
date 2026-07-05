@@ -172,29 +172,54 @@ export default function RichTextEditor({ content, filePath, onSave, onCancel, on
     }
   };
 
-  // On Backspace/Delete: fully remove selected image or wrapper
+  // On Backspace/Delete: remove image/wrapper
   const handleKeyDown = (e: React.KeyboardEvent) => {
     if (e.key !== 'Backspace' && e.key !== 'Delete') return;
     const sel = window.getSelection();
     if (!sel?.rangeCount) return;
+    const range = sel.getRangeAt(0);
+
+    // Case 1: image/wrapper is selected or cursor is inside one
     const node = sel.anchorNode;
-    // Check for wrapper or bare img
-    const target = (node as HTMLElement)?.closest?.('div[id^="img_"]') as HTMLElement
+    const target = (node as HTMLElement)?.closest?.('div[id^="img_"].selected') as HTMLElement
+               || (node as HTMLElement)?.closest?.('img.selected') as HTMLElement
+               || (node as HTMLElement)?.closest?.('div[id^="img_"]') as HTMLElement
                || (node as HTMLElement)?.closest?.('img') as HTMLElement;
     if (target) {
       e.preventDefault();
       target.remove();
+      return;
+    }
+
+    // Case 2: cursor at start of line after image — delete the image above
+    if (e.key === 'Backspace' && range.collapsed && range.startOffset === 0) {
+      const block = range.startContainer;
+      const prev = block.nodeType === 3
+        ? block.parentElement?.previousElementSibling
+        : (block as HTMLElement).previousElementSibling;
+      if (prev?.matches?.('div[id^="img_"], img')) {
+        e.preventDefault();
+        prev.remove();
+      }
     }
   };
 
-  // Click on image wrapper → show selection outline
+  // Click on image → select it
   const handleClick = (e: React.MouseEvent) => {
     const target = e.target as HTMLElement;
-    editorRef.current?.querySelectorAll('div[id^="img_"].selected').forEach(el => el.classList.remove('selected'));
+    if (target.closest?.('[data-resize]')) return;
     const wrapper = target.closest?.('div[id^="img_"]') as HTMLElement;
-    if (wrapper && !target.closest?.('[data-resize]')) {
-      wrapper.classList.add('selected');
-    }
+    const img = target.closest?.('img') as HTMLElement;
+    if (!wrapper && !img) return;
+    editorRef.current?.querySelectorAll('div[id^="img_"].selected, img.selected').forEach(el => el.classList.remove('selected'));
+    const el = wrapper || img;
+    el.classList.add('selected');
+    e.preventDefault();
+    const r = document.createRange();
+    r.selectNode(el);
+    const s = window.getSelection();
+    s?.removeAllRanges();
+    s?.addRange(r);
   };
 
   const handleCancel = () => {
