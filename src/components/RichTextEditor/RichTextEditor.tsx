@@ -127,6 +127,8 @@ export default function RichTextEditor({ content, filePath, onSave, onCancel, on
   const handleSave = async () => {
     if (!editorRef.current) return;
     setSaving(true);
+    // Strip resize handles before saving
+    editorRef.current.querySelectorAll('[data-resize]').forEach(h => h.remove());
     const html = editorRef.current.innerHTML;
     const ok = await saveMarkdown(filePath, html);
     setSaving(false);
@@ -168,10 +170,10 @@ export default function RichTextEditor({ content, filePath, onSave, onCancel, on
             if (!file) return;
             const reader = new FileReader();
             reader.onload = () => {
-              // Build a resizable image block with JS drag handle
+              // Build a centered, resizable image block
               const uid = 'img_' + Date.now();
-              const html = `<div contenteditable="false" style="display:inline-block;position:relative;max-width:100%;min-width:40px;" id="${uid}">
-                <img src="${reader.result}" style="display:block;width:100%;height:auto;pointer-events:none;" />
+              const html = `<div contenteditable="false" style="display:block;margin:16px auto;position:relative;max-width:100%;min-width:40px;text-align:center;" id="${uid}">
+                <img src="${reader.result}" style="display:block;width:100%;height:auto;max-width:100%;" />
                 <span style="position:absolute;right:0;bottom:0;width:12px;height:12px;background:var(--color-highlight);cursor:nwse-resize;border:2px solid #000;z-index:5;" data-resize="${uid}"></span>
               </div>`;
               editorRef.current?.focus();
