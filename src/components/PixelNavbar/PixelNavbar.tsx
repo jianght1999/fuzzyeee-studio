@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { useTheme } from '../../contexts/ThemeContext';
 import { useAuth } from '../../contexts/AuthContext';
 import LoginModal from '../LoginModal/LoginModal';
+import RecentDropdown from '../RecentDropdown/RecentDropdown';
 import styles from './PixelNavbar.module.css';
 
 export default function PixelNavbar() {
@@ -16,6 +17,7 @@ export default function PixelNavbar() {
         <button className="pixel-button" onClick={toggle} title="toggle theme">
           {theme === 'dark' ? '☀' : '☾'}
         </button>
+        <RecentDropdown />
         {isLoggedIn ? (
           <button className="pixel-button" onClick={logout}>
             logout

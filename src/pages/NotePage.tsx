@@ -5,6 +5,7 @@ import { useMarkdownPages } from '../hooks/useMarkdownPages';
 import { useAuth } from '../contexts/AuthContext';
 import { useTheme } from '../contexts/ThemeContext';
 import LoginModal from '../components/LoginModal/LoginModal';
+import RecentDropdown from '../components/RecentDropdown/RecentDropdown';
 import Sidebar from '../components/Sidebar/Sidebar';
 import RichTextEditor from '../components/RichTextEditor/RichTextEditor';
 import HtmlRenderer from '../components/HtmlRenderer/HtmlRenderer';
@@ -166,6 +167,7 @@ export default function NotePage() {
           <button className="pixel-button" onClick={toggleTheme} title="toggle theme">
             {theme === 'dark' ? '☀' : '☾'}
           </button>
+          <RecentDropdown />
           {isLoggedIn ? (
             <>
               <button className="pixel-button" onClick={logout}>logout</button>

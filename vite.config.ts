@@ -1,6 +1,6 @@
 import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react'
-import { writeFile, mkdir, unlink } from 'node:fs/promises'
+import { writeFile, mkdir, unlink, readFile } from 'node:fs/promises'
 import { resolve, dirname } from 'node:path'
 import type { IncomingMessage, ServerResponse } from 'node:http'
 
@@ -36,6 +36,25 @@ function generateToken(): string {
   return 'pixel_' + Math.random().toString(36).slice(2) + Date.now().toString(36)
 }
 
+const RECENT_PATH = resolve(process.cwd(), '.recent.json')
+
+async function updateRecent(filePath: string) {
+  try {
+    const raw = await readFile(RECENT_PATH, 'utf-8').catch(() => '[]')
+    const list = JSON.parse(raw)
+    // Extract title from filename, category from path
+    const parts = filePath.replace(/\\/g, '/').split('/')
+    const filename = parts[parts.length - 1].replace(/\.html$/, '')
+    const catIdx = parts.indexOf('src') + 2 // src/content/{category}/...
+    const category = catIdx < parts.length ? parts[catIdx] : ''
+    // Remove existing entry for same path, prepend new
+    const filtered = list.filter((e: any) => e.path !== filePath)
+    filtered.unshift({ path: filePath, title: filename, category, time: new Date().toISOString() })
+    // Keep only last 50
+    await writeFile(RECENT_PATH, JSON.stringify(filtered.slice(0, 50), null, 2), 'utf-8')
+  } catch { /* ignore */ }
+}
+
 function editorPlugin(): any {
   return {
     name: 'editor-api',
@@ -67,6 +86,7 @@ function editorPlugin(): any {
           const filePath = resolve(process.cwd(), body.path)
           await mkdir(dirname(filePath), { recursive: true })
           await writeFile(filePath, body.content, 'utf-8')
+          updateRecent(body.path) // fire-and-forget
           sendJSON(res, { success: true })
         } catch (err) {
           sendJSON(res, { success: false, error: String(err) }, 500)
@@ -81,6 +101,28 @@ function editorPlugin(): any {
           const filePath = resolve(process.cwd(), body.path)
           await mkdir(dirname(filePath), { recursive: true })
           await writeFile(filePath, body.content || '# New Page\n\n', 'utf-8')
+          sendJSON(res, { success: true })
+        } catch (err) {
+          sendJSON(res, { success: false, error: String(err) }, 500)
+        }
+      })
+
+      server.middlewares.use('/api/recent', async (_req: IncomingMessage, res: ServerResponse) => {
+        try {
+          const raw = await readFile(RECENT_PATH, 'utf-8').catch(() => '[]')
+          sendJSON(res, JSON.parse(raw))
+        } catch { sendJSON(res, []) }
+      })
+
+      server.middlewares.use('/api/recent-delete', async (req: IncomingMessage, res: ServerResponse) => {
+        if (req.method !== 'POST') return
+        const body = await parseBody(req)
+        if (!checkAuth(tokens, body, res)) return
+        try {
+          const raw = await readFile(RECENT_PATH, 'utf-8').catch(() => '[]')
+          const list = JSON.parse(raw)
+          const filtered = list.filter((e: any) => e.path !== body.path)
+          await writeFile(RECENT_PATH, JSON.stringify(filtered, null, 2), 'utf-8')
           sendJSON(res, { success: true })
         } catch (err) {
           sendJSON(res, { success: false, error: String(err) }, 500)
