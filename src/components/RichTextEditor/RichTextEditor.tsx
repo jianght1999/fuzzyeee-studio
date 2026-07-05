@@ -42,12 +42,44 @@ export default function RichTextEditor({ content, filePath, onSave, onCancel, on
     return () => window.removeEventListener('beforeunload', handler);
   }, [isDirty]);
 
-  // Set initial content only once, enable native image resize handles
+  /** Re-attach resize handles to all image wrappers (stripped on save) */
+  const attachResizeHandles = () => {
+    if (!editorRef.current) return;
+    editorRef.current.querySelectorAll<HTMLElement>('div[id^="img_"]').forEach(wrapper => {
+      if (wrapper.querySelector('[data-resize]')) return; // already has handle
+      const uid = wrapper.id || 'img_' + Date.now() + Math.random().toString(36).slice(2);
+      if (!wrapper.id) wrapper.id = uid;
+      const handle = document.createElement('span');
+      handle.setAttribute('contenteditable', 'false');
+      handle.setAttribute('style', 'position:absolute;right:0;bottom:0;width:12px;height:12px;background:var(--color-highlight);cursor:nwse-resize;border:2px solid #000;z-index:5;');
+      handle.setAttribute('data-resize', uid);
+      const img = wrapper.querySelector('img');
+      let startX = 0, startW = 0;
+      handle.onmousedown = (ev) => {
+        ev.preventDefault(); ev.stopPropagation();
+        startX = ev.clientX; startW = wrapper.offsetWidth;
+        const onMove = (e: MouseEvent) => {
+          const w = Math.max(40, startW + e.clientX - startX);
+          wrapper.style.width = w + 'px';
+          if (img) img.style.width = '100%';
+        };
+        const onUp = () => {
+          document.removeEventListener('mousemove', onMove);
+          document.removeEventListener('mouseup', onUp);
+        };
+        document.addEventListener('mousemove', onMove);
+        document.addEventListener('mouseup', onUp);
+      };
+      wrapper.appendChild(handle);
+    });
+  };
+
+  // Set initial content only once
   useEffect(() => {
     if (editorRef.current && editorRef.current.innerHTML !== content) {
       editorRef.current.innerHTML = content;
     }
-    document.execCommand('enableObjectResizing', false, 'true');
+    attachResizeHandles();
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
