@@ -107,13 +107,6 @@ function editorPlugin(): any {
         }
       })
 
-      server.middlewares.use('/api/recent', async (_req: IncomingMessage, res: ServerResponse) => {
-        try {
-          const raw = await readFile(RECENT_PATH, 'utf-8').catch(() => '[]')
-          sendJSON(res, JSON.parse(raw))
-        } catch { sendJSON(res, []) }
-      })
-
       server.middlewares.use('/api/recent-delete', async (req: IncomingMessage, res: ServerResponse) => {
         if (req.method !== 'POST') return
         const body = await parseBody(req)
@@ -127,6 +120,14 @@ function editorPlugin(): any {
         } catch (err) {
           sendJSON(res, { success: false, error: String(err) }, 500)
         }
+      })
+
+      server.middlewares.use('/api/recent', async (req: IncomingMessage, res: ServerResponse) => {
+        if (req.method !== 'GET') return
+        try {
+          const raw = await readFile(RECENT_PATH, 'utf-8').catch(() => '[]')
+          sendJSON(res, JSON.parse(raw))
+        } catch { sendJSON(res, []) }
       })
 
       server.middlewares.use('/api/delete-page', async (req: IncomingMessage, res: ServerResponse) => {
