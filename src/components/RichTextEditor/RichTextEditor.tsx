@@ -154,6 +154,20 @@ export default function RichTextEditor({ content, filePath, onSave, onCancel, on
         <button className="pixel-button" onClick={() => exec('bold')} title="bold"><b>B</b></button>
         <button className="pixel-button" onClick={() => exec('italic')} title="italic"><i>I</i></button>
         <button className="pixel-button" onClick={() => exec('underline')} title="underline"><u>U</u></button>
+        <span className={styles.sep} />
+        <button className="pixel-button" onClick={() => {
+          const url = window.prompt('image URL:');
+          if (url) exec('insertImage', url);
+        }} title="insert image">🖼</button>
+        <button className="pixel-button" onClick={() => {
+          const img = editorRef.current?.querySelector('img:hover, img:focus') as HTMLImageElement || undefined;
+          const selImg = window.getSelection()?.anchorNode?.parentElement?.closest?.('img');
+          const target = img || selImg;
+          if (target instanceof HTMLImageElement) {
+            target.style.float = target.style.float === 'left' ? 'none' : 'left';
+            target.style.margin = target.style.float === 'left' ? '0 16px 8px 0' : '0';
+          }
+        }} title="toggle float">◧</button>
       </div>
       <div className={styles.toolbar}>
         <select className={styles.select} onChange={(e) => { if (e.target.value) applyFont(e.target.value); e.target.value = ''; }}>

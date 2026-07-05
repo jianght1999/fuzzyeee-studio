@@ -29,6 +29,11 @@ export default function Sidebar({
   const [renameValue, setRenameValue] = useState('');
   const [dragOver, setDragOver] = useState<string | null>(null);
   const justDragged = useRef(false);
+  const [sidebarWidth, setSidebarWidth] = useState(() => {
+    const saved = localStorage.getItem('sidebar_width');
+    return saved ? parseInt(saved) : 220;
+  });
+  const resizing = useRef(false);
 
   // Auto-expand parent after adding sub-page
   useEffect(() => {
@@ -75,6 +80,25 @@ export default function Sidebar({
   };
 
   const cancelRename = () => setRenaming(null);
+
+  const startResize = (e: React.MouseEvent) => {
+    e.preventDefault();
+    resizing.current = true;
+    const startX = e.clientX;
+    const startW = sidebarWidth;
+    const onMove = (ev: MouseEvent) => {
+      const w = Math.max(160, Math.min(500, startW + ev.clientX - startX));
+      setSidebarWidth(w);
+    };
+    const onUp = () => {
+      resizing.current = false;
+      localStorage.setItem('sidebar_width', String(sidebarWidth));
+      document.removeEventListener('mousemove', onMove);
+      document.removeEventListener('mouseup', onUp);
+    };
+    document.addEventListener('mousemove', onMove);
+    document.addEventListener('mouseup', onUp);
+  };
 
   const handleAdd = (parentSlug?: string) => {
     const label = parentSlug ? `new sub-page under "${parentSlug}"` : 'new page name';
@@ -185,7 +209,10 @@ export default function Sidebar({
   return (
     <>
       <button className={styles.hamburger} onClick={() => setMobileOpen(true)}>☰</button>
-      <aside className={styles.desktopSidebar}>{sidebarContent}</aside>
+      <aside className={styles.desktopSidebar} style={{ width: sidebarWidth }}>
+        {sidebarContent}
+        <div className={styles.resizeHandle} onMouseDown={startResize} />
+      </aside>
       {mobileOpen && (
         <>
           <div className={styles.overlay} onClick={() => setMobileOpen(false)} />

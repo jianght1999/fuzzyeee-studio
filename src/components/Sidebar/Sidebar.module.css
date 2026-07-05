@@ -7,6 +7,22 @@
   background: var(--color-card-bg);
   overflow-y: auto;
   padding-bottom: 40px;
+  position: relative;
+}
+
+.resizeHandle {
+  position: absolute;
+  top: 0;
+  right: -6px;
+  width: 8px;
+  height: 100%;
+  cursor: col-resize;
+  z-index: 10;
+}
+
+.resizeHandle:hover {
+  background: var(--color-highlight);
+  opacity: 0.3;
 }
 
 .list {

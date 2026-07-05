@@ -14,7 +14,7 @@ export const categories: Category[] = [
     description: '',
     image: '/images/guitar.png',
     isAvailable: true,
-    emoji: '🎸',
+    emoji: '🎷',
   },
   {
     slug: 'synth',
