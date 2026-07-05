@@ -34,22 +34,8 @@
   max-width: 100%;
   height: auto;
   image-rendering: pixelated;
-  cursor: pointer;
-  transition: transform 0.1s step-end;
   display: block;
   margin: 12px auto;
-}
-
-.renderer img:active {
-  transform: scale(1.5);
-}
-
-.zoomed {
-  max-width: none !important;
-  transform: scale(1.5);
-  transform-origin: top center;
-  z-index: 10;
-  position: relative;
 }
 
 .renderer strong, .renderer b {
