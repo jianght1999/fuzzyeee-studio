@@ -85,7 +85,7 @@ export default function RichTextEditor({ content, filePath, onSave, onCancel, on
   };
 
   const resetColor = () => {
-    exec('removeFormat');
+    wrapSelection('color:inherit');
   };
 
   const handleSave = async () => {
@@ -126,8 +126,9 @@ export default function RichTextEditor({ content, filePath, onSave, onCancel, on
           <option value="">font</option>
           {FONTS.map(f => <option key={f.label} value={f.value}>{f.label}</option>)}
         </select>
-        <select className={styles.select} onChange={(e) => { if (e.target.value) applyFontSize(e.target.value); e.target.value = ''; }}>
+        <select className={styles.select} onChange={(e) => { if (e.target.value === 'auto') { wrapSelection('font-size:inherit'); } else if (e.target.value) { applyFontSize(e.target.value); } e.target.value = ''; }}>
           <option value="">size</option>
+          <option value="auto">auto</option>
           {SIZES.map(s => <option key={s} value={s}>{s}</option>)}
         </select>
         <span className={styles.colorGroup}>
