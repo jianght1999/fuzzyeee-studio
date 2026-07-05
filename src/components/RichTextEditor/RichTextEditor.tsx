@@ -77,18 +77,15 @@ export default function RichTextEditor({ content, filePath, onSave, onCancel, on
   };
 
   const applyFont = (font: string) => {
-    wrapSelection(`font-family:${font}`);
-    editorRef.current?.focus();
+    exec('fontName', font);
   };
 
   const applyColor = (color: string) => {
-    wrapSelection(`color:${color}`);
-    editorRef.current?.focus();
+    exec('foreColor', color);
   };
 
   const resetColor = () => {
-    wrapSelection('color:inherit');
-    editorRef.current?.focus();
+    exec('removeFormat');
   };
 
   const handleSave = async () => {
