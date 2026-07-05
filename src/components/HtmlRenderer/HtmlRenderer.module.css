@@ -3,7 +3,7 @@
   font-size: var(--view-size, 20px);
   line-height: 1.8;
   color: var(--color-text);
-  max-width: 720px;
+  max-width: 900px;
 }
 
 .renderer h1 {
