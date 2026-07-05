@@ -18,22 +18,17 @@ interface RichTextEditorProps {
   onHasChanges?: (dirty: boolean) => void;
 }
 
-/** Wrap selection in a styled span — handles cross-element selections */
-function wrapSelection(style: string) {
+/** Wrap selected content in a styled span — always uses extract+insert (reliable) */
+function wrapWithSpan(style: string) {
   const sel = window.getSelection();
   if (!sel || !sel.rangeCount || sel.isCollapsed) return;
   const range = sel.getRangeAt(0);
+  if (range.toString().length === 0) return;
   const span = document.createElement('span');
   span.setAttribute('style', style);
-  try {
-    range.surroundContents(span);
-  } catch {
-    // Selection crosses element boundaries — extract, wrap, re-insert
-    const frag = range.extractContents();
-    span.appendChild(frag);
-    range.insertNode(span);
-  }
-  sel.removeAllRanges();
+  const frag = range.extractContents();
+  span.appendChild(frag);
+  range.insertNode(span);
 }
 
 export default function RichTextEditor({ content, filePath, onSave, onCancel, onHasChanges }: RichTextEditorProps) {
@@ -72,7 +67,7 @@ export default function RichTextEditor({ content, filePath, onSave, onCancel, on
   };
 
   const applyFontSize = (size: string) => {
-    wrapSelection(`font-size:${size}`);
+    wrapWithSpan(`font-size:${size}`);
     editorRef.current?.focus();
   };
 
@@ -80,15 +75,16 @@ export default function RichTextEditor({ content, filePath, onSave, onCancel, on
     exec('fontName', font);
   };
 
+  // Apply color — wraps in a span with CSS variable so theme changes take effect
   const applyColor = (color: string) => {
-    document.execCommand('styleWithCSS', false, 'true');
-    exec('foreColor', color);
+    wrapWithSpan(`color:${color}`);
+    editorRef.current?.focus();
   };
 
+  // "Default" color — uses CSS variable that follows light/dark mode
   const resetColor = () => {
-    document.execCommand('styleWithCSS', false, 'true');
-    // Empty string = browser default / inherited color
-    exec('foreColor', '');
+    wrapWithSpan('color:var(--color-text)');
+    editorRef.current?.focus();
   };
 
   const handleSave = async () => {
@@ -129,9 +125,8 @@ export default function RichTextEditor({ content, filePath, onSave, onCancel, on
           <option value="">font</option>
           {FONTS.map(f => <option key={f.label} value={f.value}>{f.label}</option>)}
         </select>
-        <select className={styles.select} onChange={(e) => { const v = e.target.value; if (v === 'auto') { document.execCommand('styleWithCSS', false, 'true'); exec('fontSize', ''); } else if (v) { applyFontSize(v); } e.target.value = ''; }}>
-          <option value="">size</option>
-          <option value="auto">auto</option>
+        <select className={styles.select} onChange={(e) => { const v = e.target.value; if (v) applyFontSize(v); e.target.value = ''; }}>
+          <option value="">size (20px)</option>
           {SIZES.map(s => <option key={s} value={s}>{s}</option>)}
         </select>
         <span className={styles.colorGroup}>
