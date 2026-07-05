@@ -21,6 +21,7 @@ interface RichTextEditorProps {
 export default function RichTextEditor({ content, filePath, onSave, onCancel, onHasChanges }: RichTextEditorProps) {
   const { saveMarkdown } = useAuth();
   const editorRef = useRef<HTMLDivElement>(null);
+  const sizeRef = useRef<HTMLSelectElement>(null);
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
 
@@ -46,6 +47,37 @@ export default function RichTextEditor({ content, filePath, onSave, onCancel, on
       editorRef.current.innerHTML = content;
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  // Update size dropdown based on current selection
+  useEffect(() => {
+    const handler = () => {
+      if (!sizeRef.current) return;
+      const sel = window.getSelection();
+      if (!sel?.rangeCount || sel.isCollapsed || !editorRef.current?.contains(sel.anchorNode)) {
+        sizeRef.current.value = '';
+        return;
+      }
+      const range = sel.getRangeAt(0);
+      const frag = range.cloneContents();
+      const spans = frag.querySelectorAll('span[style*="font-size"]');
+      const sizes = new Set<string>();
+      spans.forEach(s => {
+        const fs = (s as HTMLElement).style.fontSize;
+        if (fs) sizes.add(fs);
+      });
+      // Also check direct computed style if no spans
+      if (sizes.size === 0) {
+        sizeRef.current.value = '';
+      } else if (sizes.size === 1) {
+        const val = [...sizes][0];
+        sizeRef.current.value = SIZES.includes(val) ? val : '';
+      } else {
+        sizeRef.current.value = '';
+      }
+    };
+    document.addEventListener('selectionchange', handler);
+    return () => document.removeEventListener('selectionchange', handler);
   }, []);
 
   const exec = (cmd: string, val?: string) => {
@@ -133,8 +165,8 @@ export default function RichTextEditor({ content, filePath, onSave, onCancel, on
           <option value="">font</option>
           {FONTS.map(f => <option key={f.label} value={f.value}>{f.label}</option>)}
         </select>
-        <select className={styles.select} onChange={(e) => { const v = e.target.value; if (v) applyFontSize(v); e.target.value = ''; }}>
-          <option value="">size (20px)</option>
+        <select ref={sizeRef} className={styles.select} onChange={(e) => { const v = e.target.value; if (v) applyFontSize(v); }}>
+          <option value="">size</option>
           {SIZES.map(s => <option key={s} value={s}>{s}</option>)}
         </select>
         <span className={styles.colorGroup}>
