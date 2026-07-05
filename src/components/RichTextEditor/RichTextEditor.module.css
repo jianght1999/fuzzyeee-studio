@@ -89,15 +89,18 @@
 .editable img {
   max-width: 100%;
   resize: both;
-  overflow: auto;
+  overflow: hidden;
   display: inline-block;
   cursor: pointer;
   image-rendering: pixelated;
   border: 2px solid transparent;
+  min-width: 20px;
+  min-height: 20px;
 }
 
 .editable img:hover {
   border-color: var(--color-highlight);
+  outline: 2px dashed var(--color-highlight);
 }
 
 .editable h1 { font-size: 2em; }

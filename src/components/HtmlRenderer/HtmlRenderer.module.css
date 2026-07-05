@@ -4,6 +4,8 @@
   line-height: 1.8;
   color: var(--color-text);
   max-width: 900px;
+  margin: 0 auto;
+  text-align: center;
 }
 
 .renderer h1 {
@@ -33,6 +35,12 @@
   max-width: 100%;
   height: auto;
   image-rendering: pixelated;
+  cursor: pointer;
+  transition: transform 0.1s step-end;
+}
+
+.renderer img:active {
+  transform: scale(1.5);
 }
 
 .renderer strong, .renderer b {
