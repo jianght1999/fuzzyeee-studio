@@ -38,6 +38,11 @@
   margin: 12px auto;
 }
 
+/* Hide resize handles in preview */
+[data-resize] {
+  display: none !important;
+}
+
 .renderer strong, .renderer b {
   color: var(--color-highlight);
 }

@@ -159,8 +159,6 @@ export default function RichTextEditor({ content, filePath, onSave, onCancel, on
   const handleSave = async () => {
     if (!editorRef.current) return;
     setSaving(true);
-    // Strip resize handles before saving
-    editorRef.current.querySelectorAll('[data-resize]').forEach(h => h.remove());
     const html = editorRef.current.innerHTML;
     const ok = await saveMarkdown(filePath, html);
     setSaving(false);
