@@ -26,7 +26,7 @@ export const categories: Category[] = [
   },
   {
     slug: 'reading',
-    title: 'reading',
+    title: 'writing',
     description: '',
     image: '/images/reading.png',
     isAvailable: true,
