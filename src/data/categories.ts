@@ -36,7 +36,7 @@ export const categories: Category[] = [
     slug: 'coming-soon',
     title: 'coming soon',
     description: '',
-    image: '',
+    image: '/images/coming-soon.png',
     isAvailable: false,
     emoji: '❓',
   },
