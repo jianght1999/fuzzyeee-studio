@@ -337,7 +337,7 @@ export default function RichTextEditor({ content, filePath, onSave, onCancel, on
         className={styles.editable}
         contentEditable
         suppressContentEditableWarning
-        onInput={() => onHasChanges?.(isDirty())}
+        onInput={() => { onHasChanges?.(isDirty()); setTimeout(attachResizeHandles, 100); }}
         onKeyDown={handleKeyDown}
         onClick={handleClick}
       />
