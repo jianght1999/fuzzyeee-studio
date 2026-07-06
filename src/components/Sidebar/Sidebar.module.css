@@ -6,6 +6,7 @@
   box-shadow: 4px 0 0 var(--color-border);
   background: var(--color-card-bg);
   overflow-y: auto;
+  overflow-x: hidden;
   padding-bottom: 40px;
   position: relative;
 }
