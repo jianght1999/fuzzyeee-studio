@@ -32,4 +32,12 @@ export const categories: Category[] = [
     isAvailable: true,
     emoji: '📚',
   },
+  {
+    slug: 'coming-soon',
+    title: 'coming soon',
+    description: '',
+    image: '',
+    isAvailable: false,
+    emoji: '❓',
+  },
 ];
