@@ -23,7 +23,7 @@ export default function CategoryCard({ category }: CategoryCardProps) {
   return (
     <div className={cardClass} onClick={handleClick}>
       <div className={styles.imageWrapper}>
-        {imgError ? (
+        {imgError || !category.image ? (
           <span className={styles.placeholderEmoji}>{category.emoji}</span>
         ) : (
           <img
