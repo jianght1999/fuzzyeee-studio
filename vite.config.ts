@@ -86,7 +86,7 @@ function editorPlugin(): any {
           const filePath = resolve(process.cwd(), body.path)
           await mkdir(dirname(filePath), { recursive: true })
           await writeFile(filePath, body.content, 'utf-8')
-          updateRecent(body.path) // fire-and-forget
+          if (body.path.endsWith('.html')) updateRecent(body.path) // only track page edits
           sendJSON(res, { success: true })
         } catch (err) {
           sendJSON(res, { success: false, error: String(err) }, 500)
