@@ -218,7 +218,6 @@ export default function RichTextEditor({ content, filePath, onSave, onCancel, on
           onClose={() => setShowImageModal(false)}
           onInsert={(daySrc, nightSrc) => {
             if (!daySrc && !nightSrc) return;
-            const uid = 'img_' + Date.now();
             const wrap = (cls: string, src: string) => src
               ? `<div contenteditable="false" data-resizable style="display:block;margin:16px auto;resize:both;overflow:hidden;max-width:100%;min-width:40px;min-height:20px;text-align:center;"><img src="${src}" class="${cls}" style="display:block;width:100%;height:auto;pointer-events:none;"></div>`
               : '';
