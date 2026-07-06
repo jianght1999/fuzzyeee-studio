@@ -228,7 +228,7 @@ body {
   cursor: url('/cursors/default.cur'), auto;
 }
 
-a, button, .pixel-button, [role='button'], input[type='submit'] {
+a, button, .pixel-button, .pixel-card, [role='button'], input[type='submit'] {
   cursor: url('/cursors/pointer.cur'), pointer;
 }
 
