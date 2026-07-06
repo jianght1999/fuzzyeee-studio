@@ -86,6 +86,12 @@
   border-color: var(--color-highlight);
 }
 
+/* Theme-aware images: show light version in light mode, dark in dark */
+[data-theme="light"] .img-dark,
+[data-theme="dark"] .img-light { display: none !important; }
+[data-theme="light"] .img-light,
+[data-theme="dark"] .img-dark { display: block !important; }
+
 .editable img {
   max-width: 100%;
   image-rendering: pixelated;

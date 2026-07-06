@@ -38,6 +38,10 @@
   margin: 12px auto;
 }
 
+/* Theme-aware images */
+[data-theme="light"] .img-dark,
+[data-theme="dark"] .img-light { display: none !important; }
+
 /* Keep resizable wrappers looking clean in preview */
 [data-resizable] {
   overflow: hidden !important;
