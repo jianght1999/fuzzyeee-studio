@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { Link } from 'react-router-dom';
 import { useTheme } from '../../contexts/ThemeContext';
 import { useAuth } from '../../contexts/AuthContext';
 import LoginModal from '../LoginModal/LoginModal';
@@ -12,7 +13,9 @@ export default function PixelNavbar() {
 
   return (
     <nav className={styles.navbar}>
-      <div className={styles.left} />
+      <div className={styles.left}>
+        <Link to="/notes/reading" className="pixel-button">建站文档</Link>
+      </div>
       <div className={styles.right}>
         <button className="pixel-button" onClick={toggle} title="toggle theme">
           {theme === 'dark' ? '☀' : '☾'}

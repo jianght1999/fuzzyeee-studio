@@ -63,7 +63,7 @@ export default function RecentDropdown() {
           <div className={styles.dropdown}>
             <div className={styles.header}>recent updates</div>
             {list.length === 0 && <div className={styles.empty}>no recent edits</div>}
-            {list.map((entry) => (
+            {list.slice(0, 10).map((entry) => (
               <div key={entry.path} className={styles.item} onClick={() => handleClick(entry)}>
                 <div className={styles.itemMain}>
                   <span className={styles.itemTitle}>{entry.title}</span>
