@@ -225,20 +225,20 @@ img {
 
 /* --- 像素风光标 --- */
 body {
-  cursor: url('/cursors/default.svg') 1 1, crosshair;
+  cursor: url('/cursors/default.cur'), auto;
 }
 
 a, button, .pixel-button, [role='button'], input[type='submit'] {
-  cursor: url('/cursors/pointer.svg') 4 4, pointer;
+  cursor: url('/cursors/pointer.cur'), pointer;
 }
 
 .pixel-card--disabled, .pixel-card--disabled *,
 [disabled], button:disabled {
-  cursor: url('/cursors/not-allowed.svg') 8 8, not-allowed;
+  cursor: url('/cursors/not-allowed.cur'), not-allowed;
 }
 
 input, textarea, [contenteditable] {
-  cursor: url('/cursors/text.svg') 4 8, text;
+  cursor: url('/cursors/text.cur'), text;
 }
 
 /* Theme-aware images */
