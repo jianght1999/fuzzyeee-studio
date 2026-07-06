@@ -240,3 +240,7 @@ a, button, .pixel-button, [role='button'], input[type='submit'] {
 input, textarea, [contenteditable] {
   cursor: url('/cursors/text.svg') 4 8, text;
 }
+
+/* Theme-aware images */
+[data-theme="light"] .img-dark { display: none !important; }
+[data-theme="dark"] .img-light { display: none !important; }
