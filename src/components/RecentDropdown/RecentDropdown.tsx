@@ -54,7 +54,7 @@ export default function RecentDropdown() {
 
   return (
     <div className={styles.container}>
-      <button className="pixel-button" onClick={() => { setOpen(!open); if (!open) fetchList(); }}>
+      <button className="pixel-button" style={{ fontSize: 13, lineHeight: 1 }} onClick={() => { setOpen(!open); if (!open) fetchList(); }}>
         📋
       </button>
       {open && (
