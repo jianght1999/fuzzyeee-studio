@@ -10,7 +10,6 @@ export default function HomePage() {
       <main className={styles.main}>
         <div className={styles.hero}>
           <h1 className={styles.title}>FUZZYEEE STUDIO</h1>
-          <p className={styles.subtitle}>personal knowledge base · music · crafts · writing</p>
         </div>
         <CategoryGrid />
       </main>
