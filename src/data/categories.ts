@@ -18,7 +18,7 @@ export const categories: Category[] = [
   },
   {
     slug: 'synth',
-    title: 'synthesizer',
+    title: 'crafts',
     description: '',
     image: '/images/synth.png',
     isAvailable: true,
