@@ -219,9 +219,9 @@ export default function RichTextEditor({ content, filePath, onSave, onCancel, on
           onInsert={(daySrc, nightSrc) => {
             if (!daySrc && !nightSrc) return;
             const uid = 'img_' + Date.now();
-            const img1 = daySrc ? `<img src="${daySrc}" class="img-light" style="display:block;width:100%;height:auto;pointer-events:none;">` : '';
-            const img2 = nightSrc ? `<img src="${nightSrc}" class="img-dark" style="display:none;width:100%;height:auto;pointer-events:none;">` : '';
-            // If both are same (single mode), show that image for both themes
+            const img1 = daySrc ? `<img src="${daySrc}" class="img-light" style="width:100%;height:auto;pointer-events:none;">` : '';
+            const img2 = nightSrc ? `<img src="${nightSrc}" class="img-dark" style="width:100%;height:auto;pointer-events:none;">` : '';
+            // CSS classes handle theme-based show/hide — no inline display:none
             const html = `<div contenteditable="false" data-resizable style="display:block;margin:16px auto;resize:both;overflow:hidden;max-width:100%;min-width:40px;min-height:20px;text-align:center;" id="${uid}">${img1}${img2}</div>`;
             editorRef.current?.focus();
             document.execCommand('insertHTML', false, html);
