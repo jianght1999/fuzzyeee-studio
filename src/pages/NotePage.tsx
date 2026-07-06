@@ -117,16 +117,30 @@ export default function NotePage() {
 
   const handleRenamePage = async (oldSlug: string, newName: string) => {
     const page = sortedPages.find(p => p.slug === oldSlug);
-    if (!page) return;
+    if (!page || !token) return;
     const oldContent = editedContent[oldSlug] ?? page.content;
     let newContent = oldContent.replace(/<h1[^>]*>.*?<\/h1>/i, `<h1>${newName}</h1>`);
     if (!/<h1/i.test(newContent)) newContent = `<h1>${newName}</h1>\n${newContent}`;
-    const fp = `src/content/${category}/${oldSlug}.html`;
-    const ok = await saveMarkdown(fp, newContent);
-    if (ok) {
-      setEditedContent(prev => ({ ...prev, [oldSlug]: newContent }));
-      window.location.reload();
-    }
+    // Rename file + subdirectory on disk
+    const oldPath = `src/content/${category}/${oldSlug}.html`;
+    const newSlug = oldSlug.includes('/')
+      ? oldSlug.replace(/\/[^/]+$/, `/${newName}`)
+      : newName;
+    const newPath = `src/content/${category}/${newSlug}.html`;
+    try {
+      const res = await fetch('/api/rename-page', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ token, oldPath, newPath }),
+      });
+      const data = await res.json();
+      if (data.success) {
+        // Also save the updated content to the new path
+        await saveMarkdown(newPath, newContent);
+        setEditedContent(prev => ({ ...prev, [oldSlug]: newContent }));
+        window.location.reload();
+      }
+    } catch { /* ignore */ }
   };
 
   if (!categoryInfo || !categoryInfo.isAvailable) {

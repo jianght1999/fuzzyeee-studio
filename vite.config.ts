@@ -1,6 +1,6 @@
 import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react'
-import { writeFile, mkdir, unlink, readFile, rm } from 'node:fs/promises'
+import { writeFile, mkdir, unlink, readFile, rm, rename as fsRename } from 'node:fs/promises'
 import { resolve, dirname } from 'node:path'
 import type { IncomingMessage, ServerResponse } from 'node:http'
 
@@ -152,6 +152,38 @@ function editorPlugin(): any {
               await writeFile(orderPath, JSON.stringify(filtered, null, 2), 'utf-8')
             }
           } catch { /* no order.json to update */ }
+          sendJSON(res, { success: true })
+        } catch (err) {
+          sendJSON(res, { success: false, error: String(err) }, 500)
+        }
+      })
+
+      server.middlewares.use('/api/rename-page', async (req: IncomingMessage, res: ServerResponse) => {
+        if (req.method !== 'POST') return
+        const body = await parseBody(req)
+        if (!checkAuth(tokens, body, res)) return
+        try {
+          const oldPath = resolve(process.cwd(), body.oldPath)
+          const newPath = resolve(process.cwd(), body.newPath)
+          // Rename the .html file
+          await mkdir(dirname(newPath), { recursive: true })
+          await fsRename(oldPath, newPath)
+          // Also rename subdirectory if exists
+          const oldSub = oldPath.replace(/\.html$/, '')
+          const newSub = newPath.replace(/\.html$/, '')
+          await fsRename(oldSub, newSub).catch(() => {})
+          // Update .order.json in parent directory
+          const oldSlug = body.oldPath.replace(/\\/g, '/').split('/').pop()?.replace(/\.html$/, '')
+          const newSlug = body.newPath.replace(/\\/g, '/').split('/').pop()?.replace(/\.html$/, '')
+          const orderPath = resolve(dirname(oldPath), '.order.json')
+          try {
+            const raw = await readFile(orderPath, 'utf-8')
+            const order = JSON.parse(raw)
+            if (Array.isArray(order) && oldSlug && newSlug) {
+              const updated = order.map((s: string) => s === oldSlug ? newSlug : s)
+              await writeFile(orderPath, JSON.stringify(updated, null, 2), 'utf-8')
+            }
+          } catch { /* no order.json */ }
           sendJSON(res, { success: true })
         } catch (err) {
           sendJSON(res, { success: false, error: String(err) }, 500)
