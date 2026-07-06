@@ -219,7 +219,7 @@ export default function RichTextEditor({ content, filePath, onSave, onCancel, on
           onInsert={(daySrc, nightSrc) => {
             if (!daySrc && !nightSrc) return;
             const wrap = (cls: string, src: string) => src
-              ? `<div contenteditable="false" data-resizable style="display:block;margin:16px auto;resize:both;overflow:hidden;max-width:100%;min-width:40px;min-height:20px;text-align:center;"><img src="${src}" class="${cls}" style="display:block;width:100%;height:auto;pointer-events:none;"></div>`
+              ? `<div contenteditable="false" data-resizable class="${cls}" style="display:block;margin:16px auto;resize:both;overflow:hidden;max-width:100%;min-width:40px;min-height:20px;text-align:center;"><img src="${src}" style="display:block;width:100%;height:auto;pointer-events:none;"></div>`
               : '';
             const html = wrap('img-light', daySrc) + wrap('img-dark', nightSrc);
             editorRef.current?.focus();
