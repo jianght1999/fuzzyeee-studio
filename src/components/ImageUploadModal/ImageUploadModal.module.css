@@ -1,0 +1,58 @@
+.overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.75);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 200;
+}
+
+.modal {
+  background: var(--color-card-bg);
+  border: 4px solid #000;
+  box-shadow: 6px 6px 0 #333;
+  padding: 24px;
+  min-width: 320px;
+}
+
+.title {
+  font-family: var(--font-pixel);
+  font-size: 14px;
+  color: var(--color-highlight);
+  margin-bottom: 16px;
+  text-align: center;
+}
+
+.modeSwitch {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 16px;
+  justify-content: center;
+}
+
+.row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 10px;
+}
+
+.label {
+  font-family: var(--font-pixel);
+  font-size: 12px;
+  color: var(--color-text);
+  width: 60px;
+}
+
+.ok {
+  color: var(--color-highlight);
+  font-size: 16px;
+}
+
+.actions {
+  display: flex;
+  gap: 8px;
+  margin-top: 16px;
+  justify-content: flex-end;
+}

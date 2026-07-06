@@ -1,5 +1,6 @@
 import { useState, useRef, useEffect, useCallback } from 'react';
 import { useAuth } from '../../contexts/AuthContext';
+import ImageUploadModal from '../ImageUploadModal/ImageUploadModal';
 import styles from './RichTextEditor.module.css';
 
 const FONTS = [
@@ -21,9 +22,9 @@ interface RichTextEditorProps {
 export default function RichTextEditor({ content, filePath, onSave, onCancel, onHasChanges }: RichTextEditorProps) {
   const editorRef = useRef<HTMLDivElement>(null);
   const sizeRef = useRef<HTMLSelectElement>(null);
-  const fileInputRef = useRef<HTMLInputElement>(null);
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
+  const [showImageModal, setShowImageModal] = useState(false);
   const { token: authToken } = useAuth();
 
   const isDirty = useCallback(() => editorRef.current?.innerHTML !== content, [content]);
@@ -183,24 +184,7 @@ export default function RichTextEditor({ content, filePath, onSave, onCancel, on
         <button className="pixel-button" onClick={() => exec('italic')} title="italic"><i>I</i></button>
         <button className="pixel-button" onClick={() => exec('underline')} title="underline"><u>U</u></button>
         <span className={styles.sep} />
-        <button className="pixel-button" onClick={() => fileInputRef.current?.click()} title="insert image">🖼</button>
-        <input ref={fileInputRef} type="file" accept="image/*" multiple style={{ display: 'none' }} onChange={(e) => {
-          const files = e.target.files;
-          if (!files || files.length === 0) return;
-          const uid = 'img_' + Date.now();
-          const readFile = (file: File): Promise<string> => new Promise(resolve => {
-            const reader = new FileReader();
-            reader.onload = () => resolve(reader.result as string);
-            reader.readAsDataURL(file);
-          });
-          Promise.all([...files].slice(0, 2).map(readFile)).then(([src1, src2]) => {
-            const img1 = src1 ? `<img src="${src1}" class="img-light" style="display:block;width:100%;height:auto;pointer-events:none;">` : '';
-            const img2 = src2 ? `<img src="${src2}" class="img-dark" style="display:none;width:100%;height:auto;pointer-events:none;">` : '';
-            const html = `<div contenteditable="false" data-resizable style="display:block;margin:16px auto;resize:both;overflow:hidden;max-width:100%;min-width:40px;min-height:20px;text-align:center;" id="${uid}">${img1}${img2}</div>`;
-            if (src1) { editorRef.current?.focus(); document.execCommand('insertHTML', false, html); }
-          });
-          e.target.value = '';
-        }} />
+        <button className="pixel-button" onClick={() => setShowImageModal(true)} title="insert image">🖼</button>
         <button className="pixel-button" onClick={() => {
           const sel = window.getSelection();
           const el = sel?.anchorNode?.parentElement;
@@ -229,6 +213,21 @@ export default function RichTextEditor({ content, filePath, onSave, onCancel, on
         onKeyDown={handleKeyDown}
         onClick={handleClick}
       />
+      {showImageModal && (
+        <ImageUploadModal
+          onClose={() => setShowImageModal(false)}
+          onInsert={(daySrc, nightSrc) => {
+            if (!daySrc && !nightSrc) return;
+            const uid = 'img_' + Date.now();
+            const img1 = daySrc ? `<img src="${daySrc}" class="img-light" style="display:block;width:100%;height:auto;pointer-events:none;">` : '';
+            const img2 = nightSrc ? `<img src="${nightSrc}" class="img-dark" style="display:none;width:100%;height:auto;pointer-events:none;">` : '';
+            // If both are same (single mode), show that image for both themes
+            const html = `<div contenteditable="false" data-resizable style="display:block;margin:16px auto;resize:both;overflow:hidden;max-width:100%;min-width:40px;min-height:20px;text-align:center;" id="${uid}">${img1}${img2}</div>`;
+            editorRef.current?.focus();
+            document.execCommand('insertHTML', false, html);
+          }}
+        />
+      )}
     </div>
   );
 }
