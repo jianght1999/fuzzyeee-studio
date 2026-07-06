@@ -1,6 +1,6 @@
 import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react'
-import { writeFile, mkdir, unlink, readFile } from 'node:fs/promises'
+import { writeFile, mkdir, unlink, readFile, rm } from 'node:fs/promises'
 import { resolve, dirname } from 'node:path'
 import type { IncomingMessage, ServerResponse } from 'node:http'
 
@@ -137,6 +137,21 @@ function editorPlugin(): any {
         try {
           const filePath = resolve(process.cwd(), body.path)
           await unlink(filePath)
+          // Also remove subdirectory if exists (same name minus extension)
+          const subDir = filePath.replace(/\.html$/, '')
+          await rm(subDir, { recursive: true, force: true }).catch(() => {})
+          // Remove from parent .order.json
+          const parentDir = dirname(filePath)
+          const orderPath = resolve(parentDir, '.order.json')
+          const slug = filePath.replace(/\\/g, '/').split('/').pop()?.replace(/\.html$/, '')
+          try {
+            const raw = await readFile(orderPath, 'utf-8')
+            const order = JSON.parse(raw)
+            if (Array.isArray(order) && slug) {
+              const filtered = order.filter((s: string) => s !== slug)
+              await writeFile(orderPath, JSON.stringify(filtered, null, 2), 'utf-8')
+            }
+          } catch { /* no order.json to update */ }
           sendJSON(res, { success: true })
         } catch (err) {
           sendJSON(res, { success: false, error: String(err) }, 500)
