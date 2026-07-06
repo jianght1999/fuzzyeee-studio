@@ -19,102 +19,37 @@ interface RichTextEditorProps {
 }
 
 export default function RichTextEditor({ content, filePath, onSave, onCancel, onHasChanges }: RichTextEditorProps) {
-  const { token: authToken } = useAuth();
   const editorRef = useRef<HTMLDivElement>(null);
   const sizeRef = useRef<HTMLSelectElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
+  const { token: authToken } = useAuth();
 
-  const isDirty = useCallback(() => {
-    return editorRef.current?.innerHTML !== content;
-  }, [content]);
+  const isDirty = useCallback(() => editorRef.current?.innerHTML !== content, [content]);
 
   // Warn on page close if unsaved
   useEffect(() => {
-    const handler = (e: BeforeUnloadEvent) => {
-      if (isDirty()) {
-        e.preventDefault();
-        e.returnValue = '';
-      }
-    };
+    const handler = (e: BeforeUnloadEvent) => { if (isDirty()) { e.preventDefault(); e.returnValue = ''; } };
     window.addEventListener('beforeunload', handler);
     return () => window.removeEventListener('beforeunload', handler);
   }, [isDirty]);
 
-  /** Re-attach resize handles to all image wrappers (stripped on save) */
-  const attachResizeHandles = () => {
-    if (!editorRef.current) return;
-    editorRef.current.querySelectorAll<HTMLElement>('div[id^="img_"]').forEach(wrapper => {
-      if (wrapper.querySelector('[data-resize]')) return; // already has handle
-      const uid = wrapper.id || 'img_' + Date.now() + Math.random().toString(36).slice(2);
-      if (!wrapper.id) wrapper.id = uid;
-      const handle = document.createElement('span');
-      handle.setAttribute('contenteditable', 'false');
-      handle.setAttribute('style', 'position:absolute;right:0;bottom:0;width:12px;height:12px;background:var(--color-highlight);cursor:nwse-resize;border:2px solid #000;z-index:5;');
-      handle.setAttribute('data-resize', uid);
-      const img = wrapper.querySelector('img');
-      let startX = 0, startW = 0;
-      handle.onmousedown = (ev) => {
-        ev.preventDefault(); ev.stopPropagation();
-        startX = ev.clientX; startW = wrapper.offsetWidth;
-        const onMove = (e: MouseEvent) => {
-          const w = Math.max(40, startW + e.clientX - startX);
-          wrapper.style.width = w + 'px';
-          if (img) img.style.width = '100%';
-        };
-        const onUp = () => {
-          document.removeEventListener('mousemove', onMove);
-          document.removeEventListener('mouseup', onUp);
-        };
-        document.addEventListener('mousemove', onMove);
-        document.addEventListener('mouseup', onUp);
-      };
-      wrapper.appendChild(handle);
+  // Load initial content + wrap bare images
+  useEffect(() => {
+    const el = editorRef.current;
+    if (!el) return;
+    if (el.innerHTML !== content) el.innerHTML = content;
+    // Wrap any bare <img> in a resizable container
+    el.querySelectorAll('img').forEach(img => {
+      if (img.parentElement?.hasAttribute('data-resizable')) return;
+      const wrap = document.createElement('div');
+      wrap.setAttribute('data-resizable', '');
+      wrap.setAttribute('contenteditable', 'false');
+      img.parentElement?.insertBefore(wrap, img);
+      wrap.appendChild(img);
     });
-  };
-
-  // Set initial content only once
-  useEffect(() => {
-    if (editorRef.current && editorRef.current.innerHTML !== content) {
-      editorRef.current.innerHTML = content;
-    }
-    attachResizeHandles();
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
-
-  // Update size dropdown based on current selection (looks for <font size=N>)
-  const fontSizeToOur: Record<string, string> = { '1': '10px', '2': '10px', '5': '20px', '6': '30px', '7': '40px' };
-  useEffect(() => {
-    const handler = () => {
-      if (!sizeRef.current) return;
-      const sel = window.getSelection();
-      if (!sel?.rangeCount || sel.isCollapsed || !editorRef.current?.contains(sel.anchorNode)) {
-        sizeRef.current.value = '';
-        return;
-      }
-      const range = sel.getRangeAt(0);
-      const frag = range.cloneContents();
-      const fonts = frag.querySelectorAll('font[size]');
-      const sizes = new Set<string>();
-      fonts.forEach(f => {
-        const sz = (f as HTMLElement).getAttribute('size');
-        if (sz) sizes.add(sz);
-      });
-      // Also check spans with font-size style (from old content)
-      frag.querySelectorAll('span').forEach(s => {
-        const fs = (s as HTMLElement).style.fontSize;
-        if (fs) sizes.add(fs);
-      });
-      if (sizes.size === 1) {
-        const val = [...sizes][0];
-        sizeRef.current.value = fontSizeToOur[val] || (SIZES.includes(val) ? val : '');
-      } else {
-        sizeRef.current.value = '';
-      }
-    };
-    document.addEventListener('selectionchange', handler);
-    return () => document.removeEventListener('selectionchange', handler);
   }, []);
 
   const exec = (cmd: string, val?: string) => {
@@ -122,10 +57,9 @@ export default function RichTextEditor({ content, filePath, onSave, onCancel, on
     editorRef.current?.focus();
   };
 
-  // Use <font size=N> (no styleWithCSS) — CSS overrides exact pixel sizes
   const sizeToFont: Record<string, string> = { '10px': '2', '20px': '5', '30px': '6', '40px': '7' };
+
   const applyFontSize = (size: string) => {
-    // Unwrap any existing <font size> around the selection to prevent nesting
     const sel = window.getSelection();
     if (sel?.rangeCount && !sel.isCollapsed) {
       let node: Node | null = sel.getRangeAt(0).commonAncestorContainer;
@@ -152,15 +86,12 @@ export default function RichTextEditor({ content, filePath, onSave, onCancel, on
     exec('foreColor', 'var(--color-text)');
   };
 
-  const applyFont = (font: string) => {
-    exec('fontName', font);
-  };
+  const applyFont = (font: string) => exec('fontName', font);
 
   const handleSave = async () => {
     if (!editorRef.current) { alert('editor not ready'); return; }
     setSaving(true);
     const html = editorRef.current.innerHTML;
-    // Direct fetch to bypass any closure issues
     try {
       const res = await fetch('/api/save', {
         method: 'POST',
@@ -183,62 +114,62 @@ export default function RichTextEditor({ content, filePath, onSave, onCancel, on
     }
   };
 
-  // On Backspace/Delete: remove image/wrapper
+  // Backspace/Delete handling
   const handleKeyDown = (e: React.KeyboardEvent) => {
     if (e.key !== 'Backspace' && e.key !== 'Delete') return;
     const sel = window.getSelection();
     if (!sel?.rangeCount) return;
     const range = sel.getRangeAt(0);
-
-    // Case 1: image/wrapper is selected or cursor is inside one
     const node = sel.anchorNode;
-    const target = (node as HTMLElement)?.closest?.('div[id^="img_"].selected') as HTMLElement
-               || (node as HTMLElement)?.closest?.('img.selected') as HTMLElement
-               || (node as HTMLElement)?.closest?.('div[id^="img_"]') as HTMLElement
+    const target = (node as HTMLElement)?.closest?.('[data-resizable]') as HTMLElement
                || (node as HTMLElement)?.closest?.('img') as HTMLElement;
-    if (target) {
-      e.preventDefault();
-      target.remove();
-      return;
-    }
-
-    // Case 2: cursor at start of line after image — delete the image above
+    if (target) { e.preventDefault(); target.remove(); return; }
     if (e.key === 'Backspace' && range.collapsed && range.startOffset === 0) {
       const block = range.startContainer;
-      const prev = block.nodeType === 3
-        ? block.parentElement?.previousElementSibling
-        : (block as HTMLElement).previousElementSibling;
-      if (prev?.matches?.('div[id^="img_"], img')) {
-        e.preventDefault();
-        prev.remove();
-      }
+      const prev = block.nodeType === 3 ? block.parentElement?.previousElementSibling : (block as HTMLElement).previousElementSibling;
+      if (prev?.matches?.('[data-resizable], img')) { e.preventDefault(); prev.remove(); }
     }
   };
 
-  // Click on image → select it
   const handleClick = (e: React.MouseEvent) => {
     const target = e.target as HTMLElement;
-    if (target.closest?.('[data-resize]')) return;
-    const wrapper = target.closest?.('div[id^="img_"]') as HTMLElement;
-    const img = target.closest?.('img') as HTMLElement;
-    if (!wrapper && !img) return;
-    editorRef.current?.querySelectorAll('div[id^="img_"].selected, img.selected').forEach(el => el.classList.remove('selected'));
-    const el = wrapper || img;
-    el.classList.add('selected');
+    const wrapper = target.closest?.('[data-resizable]') as HTMLElement || target.closest?.('img') as HTMLElement;
+    if (!wrapper) return;
+    editorRef.current?.querySelectorAll('.selected').forEach(el => el.classList.remove('selected'));
+    wrapper.classList.add('selected');
     e.preventDefault();
     const r = document.createRange();
-    r.selectNode(el);
+    r.selectNode(wrapper);
     const s = window.getSelection();
     s?.removeAllRanges();
     s?.addRange(r);
   };
 
   const handleCancel = () => {
-    if (isDirty()) {
-      if (!window.confirm('discard changes?')) return;
-    }
+    if (isDirty()) { if (!window.confirm('discard changes?')) return; }
     onCancel();
   };
+
+  // Size dropdown auto-detection
+  const fontSizeToOur: Record<string, string> = { '1': '10px', '2': '10px', '5': '20px', '6': '30px', '7': '40px' };
+  useEffect(() => {
+    const handler = () => {
+      if (!sizeRef.current) return;
+      const sel = window.getSelection();
+      if (!sel?.rangeCount || sel.isCollapsed || !editorRef.current?.contains(sel.anchorNode)) { sizeRef.current.value = ''; return; }
+      const frag = sel.getRangeAt(0).cloneContents();
+      const fonts = frag.querySelectorAll('font[size]');
+      const sizes = new Set<string>();
+      fonts.forEach(f => { const sz = (f as HTMLElement).getAttribute('size'); if (sz) sizes.add(sz); });
+      frag.querySelectorAll('span').forEach(s => { const fs = (s as HTMLElement).style.fontSize; if (fs) sizes.add(fs); });
+      if (sizes.size === 1) {
+        const val = [...sizes][0];
+        sizeRef.current.value = fontSizeToOur[val] || (SIZES.includes(val) ? val : '');
+      } else { sizeRef.current.value = ''; }
+    };
+    document.addEventListener('selectionchange', handler);
+    return () => document.removeEventListener('selectionchange', handler);
+  }, []);
 
   return (
     <div className={styles.editor}>
@@ -253,61 +184,24 @@ export default function RichTextEditor({ content, filePath, onSave, onCancel, on
         <button className="pixel-button" onClick={() => exec('underline')} title="underline"><u>U</u></button>
         <span className={styles.sep} />
         <button className="pixel-button" onClick={() => fileInputRef.current?.click()} title="insert image">🖼</button>
-        <input
-          ref={fileInputRef}
-          type="file"
-          accept="image/*"
-          style={{ display: 'none' }}
-          onChange={(e) => {
-            const file = e.target.files?.[0];
-            if (!file) return;
-            const reader = new FileReader();
-            reader.onload = () => {
-              // Build a centered, resizable image block
-              const uid = 'img_' + Date.now();
-              const html = `<div style="display:block;margin:16px auto;position:relative;max-width:100%;min-width:40px;text-align:center;" id="${uid}">
-                <img src="${reader.result}" style="display:block;width:100%;height:auto;max-width:100%;" />
-                <span contenteditable="false" style="position:absolute;right:0;bottom:0;width:12px;height:12px;background:var(--color-highlight);cursor:nwse-resize;border:2px solid #000;z-index:5;" data-resize="${uid}"></span>
-              </div>`;
-              editorRef.current?.focus();
-              document.execCommand('insertHTML', false, html);
-              // Attach resize logic
-              setTimeout(() => {
-                const el = editorRef.current?.querySelector(`#${uid}`) as HTMLElement;
-                const handle = el?.querySelector('[data-resize]') as HTMLElement;
-                if (!el || !handle) return;
-                const img = el.querySelector('img')!;
-                let startX = 0, startW = 0;
-                handle.onmousedown = (ev) => {
-                  ev.preventDefault(); ev.stopPropagation();
-                  startX = ev.clientX; startW = el.offsetWidth;
-                  const onMove = (e: MouseEvent) => {
-                    const w = Math.max(40, startW + e.clientX - startX);
-                    el.style.width = w + 'px';
-                    img.style.width = '100%';
-                  };
-                  const onUp = () => {
-                    document.removeEventListener('mousemove', onMove);
-                    document.removeEventListener('mouseup', onUp);
-                  };
-                  document.addEventListener('mousemove', onMove);
-                  document.addEventListener('mouseup', onUp);
-                };
-              }, 50);
-            };
-            reader.readAsDataURL(file);
-            e.target.value = '';
-          }}
-        />
+        <input ref={fileInputRef} type="file" accept="image/*" style={{ display: 'none' }} onChange={(e) => {
+          const file = e.target.files?.[0];
+          if (!file) return;
+          const reader = new FileReader();
+          reader.onload = () => {
+            const uid = 'img_' + Date.now();
+            const html = `<div contenteditable="false" data-resizable style="display:block;margin:16px auto;resize:both;overflow:hidden;max-width:100%;min-width:40px;min-height:20px;text-align:center;" id="${uid}"><img src="${reader.result}" style="display:block;width:100%;height:auto;pointer-events:none;"></div>`;
+            editorRef.current?.focus();
+            document.execCommand('insertHTML', false, html);
+          };
+          reader.readAsDataURL(file);
+          e.target.value = '';
+        }} />
         <button className="pixel-button" onClick={() => {
           const sel = window.getSelection();
           const el = sel?.anchorNode?.parentElement;
-          // Find the closest resizable wrapper or img
-          const wrapper = el?.closest?.('div[id^="img_"]') as HTMLElement || el?.closest?.('img') as HTMLElement;
-          if (wrapper) {
-            wrapper.style.float = wrapper.style.float === 'left' ? 'none' : 'left';
-            wrapper.style.margin = wrapper.style.float === 'left' ? '0 16px 8px 0' : '0';
-          }
+          const wrapper = el?.closest?.('[data-resizable]') as HTMLElement || el?.closest?.('img') as HTMLElement;
+          if (wrapper) { wrapper.style.float = wrapper.style.float === 'left' ? 'none' : 'left'; wrapper.style.margin = wrapper.style.float === 'left' ? '0 16px 8px 0' : '0'; }
         }} title="toggle float">◧</button>
       </div>
       <div className={styles.toolbar}>
@@ -322,22 +216,12 @@ export default function RichTextEditor({ content, filePath, onSave, onCancel, on
         <span className={styles.colorGroup}>
           <button className={styles.colorBtnAuto} onClick={resetColor} title="default">auto</button>
           {COLORS.map(c => (
-            <button
-              key={c}
-              className={styles.colorBtn}
-              style={{ backgroundColor: c }}
-              onClick={() => applyColor(c)}
-              title={c}
-            />
+            <button key={c} className={styles.colorBtn} style={{ backgroundColor: c }} onClick={() => applyColor(c)} title={c} />
           ))}
         </span>
       </div>
-      <div
-        ref={editorRef}
-        className={styles.editable}
-        contentEditable
-        suppressContentEditableWarning
-        onInput={() => { onHasChanges?.(isDirty()); setTimeout(attachResizeHandles, 100); }}
+      <div ref={editorRef} className={styles.editable} contentEditable suppressContentEditableWarning
+        onInput={() => onHasChanges?.(isDirty())}
         onKeyDown={handleKeyDown}
         onClick={handleClick}
       />

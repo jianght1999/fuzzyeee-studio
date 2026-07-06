@@ -88,20 +88,19 @@
 
 .editable img {
   max-width: 100%;
-  cursor: pointer;
   image-rendering: pixelated;
   display: block;
 }
 
-.editable div[id^="img_"] {
+.editable [data-resizable] {
   cursor: default;
 }
 
-.editable div[id^="img_"]:hover {
+.editable [data-resizable]:hover {
   outline: 2px dashed var(--color-highlight);
 }
 
-.editable div[id^="img_"].selected {
+.editable [data-resizable].selected {
   outline: 3px solid var(--color-highlight);
 }
 

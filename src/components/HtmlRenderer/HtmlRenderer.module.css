@@ -38,9 +38,14 @@
   margin: 12px auto;
 }
 
-/* Hide resize handles in preview */
-[data-resize] {
-  display: none !important;
+/* Keep resizable wrappers looking clean in preview */
+[data-resizable] {
+  overflow: hidden !important;
+}
+[data-resizable] img {
+  display: block;
+  width: 100%;
+  height: auto;
 }
 
 .renderer strong, .renderer b {
