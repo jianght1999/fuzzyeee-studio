@@ -232,7 +232,6 @@ a, button, .pixel-button, .pixel-card, [role='button'], input[type='submit'] {
   cursor: url('/cursors/pointer.cur'), pointer;
 }
 
-.pixel-card--disabled, .pixel-card--disabled *,
 [disabled], button:disabled {
   cursor: url('/cursors/not-allowed.cur'), not-allowed;
 }
