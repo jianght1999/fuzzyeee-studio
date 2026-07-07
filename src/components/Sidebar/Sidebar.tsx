@@ -31,7 +31,7 @@ export default function Sidebar({
   const justDragged = useRef(false);
   const [sidebarWidth, setSidebarWidth] = useState(() => {
     const saved = localStorage.getItem('sidebar_width');
-    return saved ? parseInt(saved) : 220;
+    return saved ? parseInt(saved) : 260;
   });
   const resizing = useRef(false);
 
