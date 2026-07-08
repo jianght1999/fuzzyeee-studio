@@ -225,7 +225,7 @@ img {
 
 /* --- 像素风光标 --- */
 /* 星露谷物语像素指针 */
-body, p, h1, h2, h3, h4, h5, h6, span, div, footer, header, nav, main, aside, section, article, li, td, th, label, img, em, strong, code, pre, blockquote {
+body, div, footer, header, nav, main, aside, section, article {
   cursor: url('/cursors/default.cur'), default;
 }
 
