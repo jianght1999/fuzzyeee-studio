@@ -224,25 +224,19 @@ img {
 }
 
 /* --- 像素风光标 --- */
-body, p, h1, h2, h3, h4, h5, h6, span, div, footer, header, nav, main, aside, section, article {
-  cursor: url('/cursors/default.cur'), url('/cursors/default.svg') 1 1, crosshair;
-}
+/* 星露谷物语像素指针 */
+* { cursor: url('/cursors/default.cur'), default; }
 
 a, button, .pixel-button, .pixel-card, [role='button'], input[type='submit'] {
-  cursor: url('/cursors/pointer.cur'), url('/cursors/pointer.svg') 4 4, pointer;
+  cursor: url('/cursors/pointer.cur'), pointer;
 }
 
 [disabled], button:disabled {
-  cursor: url('/cursors/not-allowed.cur'), url('/cursors/not-allowed.svg') 8 8, not-allowed;
+  cursor: url('/cursors/not-allowed.cur'), not-allowed;
 }
 
 input, textarea, [contenteditable] {
-  cursor: url('/cursors/text.cur'), url('/cursors/text.svg') 4 8, text;
-}
-
-/* Force pixel cursor on all elements, even browser-default text areas */
-* {
-  cursor: url('/cursors/default.cur'), url('/cursors/default.svg') 1 1, default;
+  cursor: url('/cursors/text.cur'), text;
 }
 
 /* Theme-aware images */
