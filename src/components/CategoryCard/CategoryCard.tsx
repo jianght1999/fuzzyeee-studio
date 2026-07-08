@@ -5,17 +5,17 @@ import styles from './CategoryCard.module.css';
 
 interface CategoryCardProps {
   category: Category;
-  onDisabledClick?: (slug: string) => void;
 }
 
-export default function CategoryCard({ category, onDisabledClick }: CategoryCardProps) {
+export default function CategoryCard({ category }: CategoryCardProps) {
   const navigate = useNavigate();
   const [imgError, setImgError] = useState(false);
+  const [showNotice, setShowNotice] = useState(false);
 
   const handleClick = (e: React.MouseEvent) => {
     if (!category.isAvailable) {
       e.stopPropagation();
-      onDisabledClick?.(category.slug);
+      setShowNotice(!showNotice);
       return;
     }
     navigate(`/notes/${category.slug}`);
@@ -27,6 +27,19 @@ export default function CategoryCard({ category, onDisabledClick }: CategoryCard
 
   return (
     <div className={cardClass} onClick={handleClick}>
+      {showNotice && (
+        <>
+          <div className={styles.noticeBackdrop} onClick={(e) => { e.stopPropagation(); setShowNotice(false); }} />
+          <div className={styles.noticeBubble} onClick={(e) => e.stopPropagation()}>
+            <div className={styles.noticeText}>
+              看看我的建站文档吧！这个网站还有很多没完成。<br />
+              <br />
+              微信 a290591510<br />
+              邮箱 jianght199907@gmail.com
+            </div>
+          </div>
+        </>
+      )}
       <div className={styles.imageWrapper}>
         {imgError || !category.image ? (
           <span className={styles.placeholderEmoji}>{category.emoji}</span>
