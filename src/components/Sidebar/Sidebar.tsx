@@ -146,12 +146,13 @@ export default function Sidebar({
             const dragged = pages.find(p => p.slug === ds);
             const draggedParent = dragged?.parentSlug ?? null;
             const targetParent = page.parentSlug;
-            // Cross-parent move
-            if (draggedParent !== targetParent) {
+            // Cross-parent move (including root→root = make child)
+            if (draggedParent !== targetParent || (!draggedParent && !targetParent && ds !== page.slug)) {
               // When dropping onto a ROOT page, make it a child of that page
               // When dropping onto a SUB-page, make it a sibling (same parent)
+              // New parent: target's own slug if dropping onto a root page, otherwise target's parent
               const newParent = page.parentSlug !== null ? page.parentSlug : page.slug.replace(/^.*\//, '');
-              onMove?.(ds, draggedParent, newParent);
+              onMove?.(ds, draggedParent ?? null, newParent || null);
               return;
             }
             // Same-parent reorder
