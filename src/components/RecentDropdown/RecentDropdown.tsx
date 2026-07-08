@@ -30,8 +30,10 @@ export default function RecentDropdown() {
 
   const handleClick = (entry: RecentEntry) => {
     setOpen(false);
-    // Use window.location to force navigation even from same route
-    window.location.href = `/notes/${entry.category}`;
+    // Extract page slug from path: src/content/{category}/{slug}.html
+    const slug = entry.path.replace(/\\/g, '/').split('/').slice(3).join('/').replace(/\.html$/, '');
+    const url = `/notes/${entry.category}?page=${encodeURIComponent(slug)}`;
+    window.location.href = url;
   };
 
   const handleDelete = async (e: React.MouseEvent, entry: RecentEntry) => {

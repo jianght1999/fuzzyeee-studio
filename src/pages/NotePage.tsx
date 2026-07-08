@@ -1,4 +1,4 @@
-import { useParams, Link } from 'react-router-dom';
+import { useParams, useSearchParams, Link } from 'react-router-dom';
 import { useState, useMemo, useEffect, useCallback, useRef } from 'react';
 import { categories } from '../data/categories';
 import { useMarkdownPages } from '../hooks/useMarkdownPages';
@@ -13,9 +13,11 @@ import styles from './NotePage.module.css';
 
 export default function NotePage() {
   const { category } = useParams<{ category: string }>();
-  const [activeSlug, setActiveSlug] = useState<string>('');
+  const [searchParams] = useSearchParams();
+  const [activeSlug, setActiveSlug] = useState<string>(() => searchParams.get('page') || '');
   const [editing, setEditing] = useState(false);
   const [editedContent, setEditedContent] = useState<Record<string, string>>({});
+  const [titleOverrides, setTitleOverrides] = useState<Record<string, string>>({});
   const [orderOverrides, setOrderOverrides] = useState<Record<string, string[]>>({});
   const [showLogin, setShowLogin] = useState(false);
   const editorDirtyRef = useRef(false);
@@ -27,7 +29,12 @@ export default function NotePage() {
   const { pages } = useMarkdownPages(category || '');
 
   const sortedPages = useMemo(() => {
-    return [...pages].sort((a, b) => {
+    // Apply title overrides
+    const mapped = pages.map(p => ({
+      ...p,
+      title: titleOverrides[p.slug] || p.title,
+    }));
+    return [...mapped].sort((a, b) => {
       // First: root pages before children
       if (!a.parentSlug && b.parentSlug) return -1;
       if (a.parentSlug && !b.parentSlug) return 1;
@@ -44,7 +51,7 @@ export default function NotePage() {
       // Different parent groups: use hook's original order (stable sort)
       return 0;
     });
-  }, [pages, orderOverrides, category]);
+  }, [pages, orderOverrides, category, titleOverrides]);
 
   useEffect(() => {
     if (sortedPages.length > 0 && !activeSlug) {
@@ -136,10 +143,9 @@ export default function NotePage() {
       const data = await res.json();
       if (data.success) {
         await saveMarkdown(newPath, newContent);
-        setEditedContent(prev => ({ ...prev, [oldSlug]: newContent }));
-        // Preserve sidebar expansion state across reload
-        sessionStorage.setItem('pixel_expand_all', '1');
-        window.location.reload();
+        setEditedContent(prev => ({ ...prev, [newSlug]: newContent }));
+        setTitleOverrides(prev => ({ ...prev, [newSlug]: newName }));
+        // HMR will pick up changes; no full reload needed
       }
     } catch { /* ignore */ }
   };
