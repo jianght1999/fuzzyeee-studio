@@ -77,6 +77,23 @@ export default function NotePage() {
     ? `src/content/${category}/${activePage.slug}.html`
     : '';
 
+  const handleMovePage = async (draggedSlug: string, fromParent: string | null, toParent: string | null) => {
+    if (!token || fromParent === toParent) return;
+    const oldDir = fromParent ? `${category}/${fromParent}` : category;
+    const newDir = toParent ? `${category}/${toParent}` : category;
+    const slugName = draggedSlug.replace(/^.*\//, '');
+    const oldPath = `src/content/${oldDir}/${slugName}.html`;
+    const newPath = `src/content/${newDir}/${slugName}.html`;
+    try {
+      await fetch('/api/move-page', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ token, oldPath, newPath }),
+      });
+      window.location.reload();
+    } catch {}
+  };
+
   const handleReorder = async (slugs: string[], parentSlug: string | null) => {
     const dirKey = parentSlug ? `${category}/${parentSlug}` : (category ?? '');
     setOrderOverrides(prev => ({ ...prev, [dirKey]: slugs }));
@@ -216,6 +233,7 @@ export default function NotePage() {
           onDeletePage={handleDeletePage}
           onRenamePage={handleRenamePage}
           onReorder={handleReorder}
+          onMove={handleMovePage}
           onExpandedChange={(slugs) => { expandedRef.current = slugs; }}
         />
 

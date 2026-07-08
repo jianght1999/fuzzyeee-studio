@@ -122,6 +122,52 @@ function editorPlugin(): any {
         }
       })
 
+      server.middlewares.use('/api/move-page', async (req: IncomingMessage, res: ServerResponse) => {
+        if (req.method !== 'POST') return
+        const body = await parseBody(req)
+        if (!checkAuth(tokens, body, res)) return
+        try {
+          const oldPath = resolve(process.cwd(), body.oldPath)
+          const newPath = resolve(process.cwd(), body.newPath)
+          // Move .html file
+          await mkdir(dirname(newPath), { recursive: true })
+          await fsRename(oldPath, newPath)
+          // Move subdirectory if exists
+          const oldSub = oldPath.replace(/\.html$/, '')
+          const newSub = newPath.replace(/\.html$/, '')
+          await fsRename(oldSub, newSub).catch(() => {})
+          // Update old parent's .order.json
+          const oldSlug = body.oldPath.replace(/\\/g, '/').split('/').pop()?.replace(/\.html$/, '')
+          const newSlug = body.newPath.replace(/\\/g, '/').split('/').pop()?.replace(/\.html$/, '')
+          // Remove from old parent
+          const oldParentDir = dirname(oldPath)
+          const oldOrderPath = resolve(oldParentDir, '.order.json')
+          try {
+            const raw = await readFile(oldOrderPath, 'utf-8')
+            const order = JSON.parse(raw)
+            if (Array.isArray(order) && oldSlug) {
+              await writeFile(oldOrderPath, JSON.stringify(order.filter((s: string) => s !== oldSlug), null, 2), 'utf-8')
+            }
+          } catch {}
+          // Add to new parent
+          const newParentDir = dirname(newPath)
+          const newOrderPath = resolve(newParentDir, '.order.json')
+          try {
+            const raw = await readFile(newOrderPath, 'utf-8').catch(() => '[]')
+            const order = JSON.parse(raw)
+            if (Array.isArray(order) && newSlug && !order.includes(newSlug)) {
+              order.push(newSlug)
+              await writeFile(newOrderPath, JSON.stringify(order, null, 2), 'utf-8')
+            } else if (!Array.isArray(order) && newSlug) {
+              await writeFile(newOrderPath, JSON.stringify([newSlug], null, 2), 'utf-8')
+            }
+          } catch {}
+          sendJSON(res, { success: true })
+        } catch (err) {
+          sendJSON(res, { success: false, error: String(err) }, 500)
+        }
+      })
+
       server.middlewares.use('/api/recent', async (req: IncomingMessage, res: ServerResponse) => {
         if (req.method !== 'GET') return
         try {

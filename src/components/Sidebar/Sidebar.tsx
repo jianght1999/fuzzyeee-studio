@@ -11,6 +11,7 @@ interface SidebarProps {
   onDeletePage?: (slug: string) => void;
   onRenamePage?: (oldSlug: string, newName: string) => void;
   onReorder?: (slugs: string[], parentSlug: string | null) => void;
+  onMove?: (draggedSlug: string, fromParent: string | null, toParent: string | null) => void;
   onExpandedChange?: (slugs: string[]) => void;
 }
 
@@ -23,6 +24,7 @@ export default function Sidebar({
   onDeletePage,
   onRenamePage,
   onReorder,
+  onMove,
   onExpandedChange,
 }: SidebarProps) {
   const [expanded, setExpanded] = useState<Set<string>>(new Set());
@@ -141,14 +143,23 @@ export default function Sidebar({
             e.preventDefault(); setDragOver(null);
             const ds = e.dataTransfer.getData('text/plain');
             if (!ds || ds === page.slug) return;
-            const siblings = page.parentSlug ? pages.filter(p => p.parentSlug === page.parentSlug) : pages.filter(p => !p.parentSlug);
+            const dragged = pages.find(p => p.slug === ds);
+            const draggedParent = dragged?.parentSlug ?? null;
+            const targetParent = page.parentSlug;
+            // Cross-parent move
+            if (draggedParent !== targetParent) {
+              onMove?.(ds, draggedParent, targetParent);
+              return;
+            }
+            // Same-parent reorder
+            const siblings = targetParent ? pages.filter(p => p.parentSlug === targetParent) : pages.filter(p => !p.parentSlug);
             const slugs = siblings.map(p => p.slug.replace(/^.*\//, ''));
             const dn = ds.replace(/^.*\//, '');
             const tn = page.slug.replace(/^.*\//, '');
             const fi = slugs.indexOf(dn), ti = slugs.indexOf(tn);
             if (fi === -1 || ti === -1) return;
             slugs.splice(fi, 1); slugs.splice(ti, 0, dn);
-            onReorder?.(slugs, page.parentSlug);
+            onReorder?.(slugs, targetParent);
           }}
           onDragEnd={() => { justDragged.current = true; setTimeout(() => { justDragged.current = false; }, 200); }}
         >
