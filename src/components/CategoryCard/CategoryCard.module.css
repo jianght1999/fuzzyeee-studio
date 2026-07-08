@@ -49,30 +49,3 @@
   text-align: center;
   line-height: 1.6;
 }
-
-.noticeBackdrop {
-  position: fixed;
-  inset: 0;
-  z-index: 150;
-}
-
-.noticeBubble {
-  position: absolute;
-  bottom: calc(100% + 16px);
-  left: 50%;
-  transform: translateX(-50%);
-  background: var(--color-card-bg);
-  border: 4px solid #000;
-  box-shadow: 6px 6px 0 #333;
-  padding: 20px 24px;
-  min-width: 280px;
-  max-width: 340px;
-  z-index: 151;
-}
-
-.noticeText {
-  font-family: var(--font-pixel);
-  font-size: 13px;
-  color: var(--color-text);
-  line-height: 1.8;
-}
