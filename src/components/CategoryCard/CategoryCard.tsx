@@ -12,8 +12,9 @@ export default function CategoryCard({ category, onDisabledClick }: CategoryCard
   const navigate = useNavigate();
   const [imgError, setImgError] = useState(false);
 
-  const handleClick = () => {
+  const handleClick = (e: React.MouseEvent) => {
     if (!category.isAvailable) {
+      e.stopPropagation();
       onDisabledClick?.(category.slug);
       return;
     }
