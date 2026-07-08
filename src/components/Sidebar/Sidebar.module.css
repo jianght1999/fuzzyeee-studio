@@ -35,14 +35,6 @@
   align-items: center;
 }
 
-.pageRow[draggable="true"] {
-  cursor: grab;
-}
-
-.pageRow[draggable="true"]:active {
-  cursor: grabbing;
-}
-
 .pageRowChild {
   padding-left: 12px;
 }
