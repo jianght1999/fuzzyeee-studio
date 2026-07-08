@@ -224,20 +224,20 @@ img {
 }
 
 /* --- 像素风光标 --- */
-body, p, h1, h2, h3, h4, h5, h6, span, div, footer, header, nav, main, aside {
-  cursor: url('/cursors/default.cur'), auto;
+body, p, h1, h2, h3, h4, h5, h6, span, div, footer, header, nav, main, aside, section, article {
+  cursor: url('/cursors/default.cur'), auto !important;
 }
 
 a, button, .pixel-button, .pixel-card, [role='button'], input[type='submit'] {
-  cursor: url('/cursors/pointer.cur'), pointer;
+  cursor: url('/cursors/pointer.cur'), pointer !important;
 }
 
 [disabled], button:disabled {
-  cursor: url('/cursors/not-allowed.cur'), not-allowed;
+  cursor: url('/cursors/not-allowed.cur'), not-allowed !important;
 }
 
 input, textarea, [contenteditable] {
-  cursor: url('/cursors/text.cur'), text;
+  cursor: url('/cursors/text.cur'), text !important;
 }
 
 /* Theme-aware images */
