@@ -148,7 +148,10 @@ export default function Sidebar({
             const targetParent = page.parentSlug;
             // Cross-parent move
             if (draggedParent !== targetParent) {
-              onMove?.(ds, draggedParent, targetParent);
+              // When dropping onto a ROOT page, make it a child of that page
+              // When dropping onto a SUB-page, make it a sibling (same parent)
+              const newParent = page.parentSlug !== null ? page.parentSlug : page.slug.replace(/^.*\//, '');
+              onMove?.(ds, draggedParent, newParent);
               return;
             }
             // Same-parent reorder
