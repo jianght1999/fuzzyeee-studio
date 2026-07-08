@@ -35,10 +35,17 @@ export default function Sidebar({
   });
   const resizing = useRef(false);
 
-  // Auto-expand parent after adding sub-page
+  // Auto-expand after add / rename
   useEffect(() => {
     const expandSlug = sessionStorage.getItem('pixel_expand');
-    if (expandSlug) {
+    const expandAll = sessionStorage.getItem('pixel_expand_all');
+    if (expandAll) {
+      sessionStorage.removeItem('pixel_expand_all');
+      const all = new Set<string>();
+      rootPages.forEach(p => { if (childrenOf(p.slug.replace(/^.*\//, '')).length > 0) all.add(p.slug); });
+      pages.filter(p => p.parentSlug && childrenOf(p.parentSlug).length > 0).forEach(p => all.add(p.slug));
+      setExpanded(all);
+    } else if (expandSlug) {
       sessionStorage.removeItem('pixel_expand');
       setExpanded(prev => new Set([...prev, expandSlug]));
     }

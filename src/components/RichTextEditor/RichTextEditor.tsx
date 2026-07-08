@@ -41,7 +41,7 @@ export default function RichTextEditor({ content, filePath, onSave, onCancel, on
     const el = editorRef.current;
     if (!el) return;
     if (el.innerHTML !== content) el.innerHTML = content;
-    // Wrap any bare <img> in a resizable container
+    // Wrap bare <img> in resizable container + add <br> after each for cursor
     el.querySelectorAll('img').forEach(img => {
       if (img.parentElement?.hasAttribute('data-resizable')) return;
       const wrap = document.createElement('div');
@@ -49,7 +49,14 @@ export default function RichTextEditor({ content, filePath, onSave, onCancel, on
       wrap.setAttribute('contenteditable', 'false');
       img.parentElement?.insertBefore(wrap, img);
       wrap.appendChild(img);
+      // Ensure trailing editable node
+      if (!wrap.nextSibling || (wrap.nextSibling.nodeType === 3 && !wrap.nextSibling.textContent?.trim())) {
+        const br = document.createElement('br');
+        wrap.parentElement?.insertBefore(br, wrap.nextSibling);
+      }
     });
+    // Ensure editor never fully empty
+    if (!el.innerHTML.trim() || el.innerHTML === '<br>') el.innerHTML = '<br>';
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
@@ -219,7 +226,7 @@ export default function RichTextEditor({ content, filePath, onSave, onCancel, on
           onInsert={(daySrc, nightSrc) => {
             if (!daySrc && !nightSrc) return;
             const wrap = (cls: string, src: string) => src
-              ? `<div contenteditable="false" data-resizable class="${cls}" style="display:block;margin:16px auto;resize:both;overflow:hidden;max-width:100%;min-width:40px;min-height:20px;text-align:center;"><img src="${src}" style="display:block;width:100%;height:auto;pointer-events:none;"></div>`
+              ? `<div contenteditable="false" data-resizable class="${cls}" style="display:block;margin:16px auto;resize:both;overflow:hidden;max-width:100%;min-width:40px;min-height:20px;text-align:center;"><img src="${src}" style="display:block;width:100%;height:auto;pointer-events:none;"></div><br>`
               : '';
             const html = wrap('img-light', daySrc) + wrap('img-dark', nightSrc);
             editorRef.current?.focus();

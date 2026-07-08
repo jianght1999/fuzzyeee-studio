@@ -135,9 +135,10 @@ export default function NotePage() {
       });
       const data = await res.json();
       if (data.success) {
-        // Also save the updated content to the new path
         await saveMarkdown(newPath, newContent);
         setEditedContent(prev => ({ ...prev, [oldSlug]: newContent }));
+        // Preserve sidebar expansion state across reload
+        sessionStorage.setItem('pixel_expand_all', '1');
         window.location.reload();
       }
     } catch { /* ignore */ }

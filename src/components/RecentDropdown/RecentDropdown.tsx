@@ -1,7 +1,10 @@
 import { useState, useEffect, useCallback } from 'react';
-import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
+import { categories } from '../../data/categories';
 import styles from './RecentDropdown.module.css';
+
+const categoryNames: Record<string, string> = {};
+categories.forEach(c => { categoryNames[c.slug] = c.title; });
 
 interface RecentEntry {
   path: string;
@@ -14,7 +17,6 @@ export default function RecentDropdown() {
   const [open, setOpen] = useState(false);
   const [list, setList] = useState<RecentEntry[]>([]);
   const { isLoggedIn, token } = useAuth();
-  const navigate = useNavigate();
 
   const fetchList = useCallback(async () => {
     try {
@@ -28,7 +30,8 @@ export default function RecentDropdown() {
 
   const handleClick = (entry: RecentEntry) => {
     setOpen(false);
-    navigate(`/notes/${entry.category}`);
+    // Use window.location to force navigation even from same route
+    window.location.href = `/notes/${entry.category}`;
   };
 
   const handleDelete = async (e: React.MouseEvent, entry: RecentEntry) => {
@@ -67,7 +70,7 @@ export default function RecentDropdown() {
               <div key={entry.path} className={styles.item} onClick={() => handleClick(entry)}>
                 <div className={styles.itemMain}>
                   <span className={styles.itemTitle}>{entry.title}</span>
-                  <span className={styles.itemMeta}>{entry.category} · {formatTime(entry.time)}</span>
+                  <span className={styles.itemMeta}>{categoryNames[entry.category] || entry.category} · {formatTime(entry.time)}</span>
                 </div>
                 {isLoggedIn && (
                   <button className={styles.delBtn} onClick={(e) => handleDelete(e, entry)} title="remove">✕</button>
