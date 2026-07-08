@@ -5,14 +5,18 @@ import styles from './CategoryCard.module.css';
 
 interface CategoryCardProps {
   category: Category;
+  onDisabledClick?: (slug: string) => void;
 }
 
-export default function CategoryCard({ category }: CategoryCardProps) {
+export default function CategoryCard({ category, onDisabledClick }: CategoryCardProps) {
   const navigate = useNavigate();
   const [imgError, setImgError] = useState(false);
 
   const handleClick = () => {
-    if (!category.isAvailable) return;
+    if (!category.isAvailable) {
+      onDisabledClick?.(category.slug);
+      return;
+    }
     navigate(`/notes/${category.slug}`);
   };
 
