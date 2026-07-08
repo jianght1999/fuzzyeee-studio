@@ -11,4 +11,5 @@
   font-size: 11px;
   color: var(--color-text-dim);
   user-select: none;
+  cursor: url('/cursors/default.cur'), auto;
 }
