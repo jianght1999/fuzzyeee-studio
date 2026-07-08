@@ -20,6 +20,7 @@ export default function NotePage() {
   const [titleOverrides, setTitleOverrides] = useState<Record<string, string>>({});
   const [orderOverrides, setOrderOverrides] = useState<Record<string, string[]>>({});
   const [showLogin, setShowLogin] = useState(false);
+  const expandedRef = useRef<string[]>([]);
   const editorDirtyRef = useRef(false);
 
   const { isLoggedIn, logout, createPage, deletePage, saveMarkdown, token } = useAuth();
@@ -145,7 +146,8 @@ export default function NotePage() {
         await saveMarkdown(newPath, newContent);
         setEditedContent(prev => ({ ...prev, [newSlug]: newContent }));
         setTitleOverrides(prev => ({ ...prev, [newSlug]: newName }));
-        // HMR will pick up changes; no full reload needed
+        // Save exact expansion state for sidebar to restore
+        sessionStorage.setItem('pixel_keep_expanded', expandedRef.current.join(','));
       }
     } catch { /* ignore */ }
   };
@@ -214,6 +216,7 @@ export default function NotePage() {
           onDeletePage={handleDeletePage}
           onRenamePage={handleRenamePage}
           onReorder={handleReorder}
+          onExpandedChange={(slugs) => { expandedRef.current = slugs; }}
         />
 
         <main className={styles.content}>

@@ -11,6 +11,7 @@ interface SidebarProps {
   onDeletePage?: (slug: string) => void;
   onRenamePage?: (oldSlug: string, newName: string) => void;
   onReorder?: (slugs: string[], parentSlug: string | null) => void;
+  onExpandedChange?: (slugs: string[]) => void;
 }
 
 export default function Sidebar({
@@ -22,6 +23,7 @@ export default function Sidebar({
   onDeletePage,
   onRenamePage,
   onReorder,
+  onExpandedChange,
 }: SidebarProps) {
   const [expanded, setExpanded] = useState<Set<string>>(new Set());
   const [mobileOpen, setMobileOpen] = useState(false);
@@ -35,16 +37,19 @@ export default function Sidebar({
   });
   const resizing = useRef(false);
 
-  // Auto-expand after add / rename
+  // Report expansion state to parent
   useEffect(() => {
+    onExpandedChange?.([...expanded]);
+  }, [expanded, onExpandedChange]);
+
+  // Restore expansion after page reload
+  useEffect(() => {
+    const saved = sessionStorage.getItem('pixel_keep_expanded');
     const expandSlug = sessionStorage.getItem('pixel_expand');
-    const expandAll = sessionStorage.getItem('pixel_expand_all');
-    if (expandAll) {
-      sessionStorage.removeItem('pixel_expand_all');
-      const all = new Set<string>();
-      rootPages.forEach(p => { if (childrenOf(p.slug.replace(/^.*\//, '')).length > 0) all.add(p.slug); });
-      pages.filter(p => p.parentSlug && childrenOf(p.parentSlug).length > 0).forEach(p => all.add(p.slug));
-      setExpanded(all);
+    if (saved) {
+      sessionStorage.removeItem('pixel_keep_expanded');
+      const savedSlugs = saved.split(',').filter(Boolean);
+      if (savedSlugs.length > 0) setExpanded(new Set(savedSlugs));
     } else if (expandSlug) {
       sessionStorage.removeItem('pixel_expand');
       setExpanded(prev => new Set([...prev, expandSlug]));
