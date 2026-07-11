@@ -4,7 +4,7 @@ import { writeFile, mkdir, unlink, readFile, rm, rename as fsRename, readdir } f
 import { resolve, dirname } from 'node:path'
 import type { IncomingMessage, ServerResponse } from 'node:http'
 
-const PASSWORD = 'pixel123'
+const PASSWORD = process.env.VITE_EDITOR_PASSWORD || 'pixel-' + Math.random().toString(36).slice(2, 8)
 
 function parseBody(req: IncomingMessage): Promise<Record<string, string>> {
   return new Promise((resolve) => {
