@@ -2,7 +2,8 @@ import { useState, useRef, useEffect } from 'react';
 import styles from './MusicPlayer.module.css';
 
 // Known music files — API fallback for production
-const KNOWN_TRACKS = ['/music/waltz-for-debby.mp3'];
+const BASE = import.meta.env.BASE_URL;
+const KNOWN_TRACKS = [BASE + 'music/waltz-for-debby.mp3'];
 
 async function fetchMusicList(): Promise<string[]> {
   try {
