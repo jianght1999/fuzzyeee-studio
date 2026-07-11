@@ -1,11 +1,15 @@
 import { useState, useRef, useEffect } from 'react';
 import styles from './MusicPlayer.module.css';
 
+// Known music files — API fallback for production
+const KNOWN_TRACKS = ['/music/waltz-for-debby.mp3'];
+
 async function fetchMusicList(): Promise<string[]> {
   try {
     const res = await fetch('/api/music-list');
-    return await res.json();
-  } catch { return []; }
+    const list = await res.json();
+    return list.length > 0 ? list : KNOWN_TRACKS;
+  } catch { return KNOWN_TRACKS; }
 }
 
 export default function MusicPlayer() {
