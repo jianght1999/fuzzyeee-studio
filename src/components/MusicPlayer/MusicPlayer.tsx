@@ -37,7 +37,7 @@ export default function MusicPlayer() {
   return (
     <div className={styles.player} onClick={handleClick} title={playing ? 'click to stop' : 'click to play'}>
       <img
-        src={playing ? '/images/cat-on.png' : '/images/cat-off.png'}
+        src={playing ? import.meta.env.BASE_URL + 'images/cat-on.png' : import.meta.env.BASE_URL + 'images/cat-off.png'}
         alt="music"
         className={styles.cat}
       />
