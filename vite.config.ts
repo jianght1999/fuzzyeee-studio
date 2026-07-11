@@ -250,5 +250,6 @@ function editorPlugin(): any {
 }
 
 export default defineConfig({
+  base: '/fuzzyeee-studio/',
   plugins: [react(), editorPlugin()],
 })
