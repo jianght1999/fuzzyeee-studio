@@ -249,7 +249,7 @@ function editorPlugin(): any {
   }
 }
 
-export default defineConfig({
-  base: '/fuzzyeee-studio/',
+export default defineConfig(({ mode }) => ({
+  base: mode === 'production' ? '/fuzzyeee-studio/' : '/',
   plugins: [react(), editorPlugin()],
-})
+}))
