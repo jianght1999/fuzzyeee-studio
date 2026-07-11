@@ -4,6 +4,8 @@ import { writeFile, mkdir, unlink, readFile, rm, rename as fsRename, readdir } f
 import { resolve, dirname } from 'node:path'
 import type { IncomingMessage, ServerResponse } from 'node:http'
 
+import { cloudflare } from "@cloudflare/vite-plugin";
+
 const PASSWORD = 'pixel123'
 
 function parseBody(req: IncomingMessage): Promise<Record<string, string>> {
@@ -246,9 +248,9 @@ function editorPlugin(): any {
       })
 
     },
-  }
+  };
 }
 
 export default defineConfig({
-  plugins: [react(), editorPlugin()],
+  plugins: [react(), editorPlugin(), cloudflare()],
 })
