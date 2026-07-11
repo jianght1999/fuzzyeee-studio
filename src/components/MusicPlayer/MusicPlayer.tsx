@@ -18,12 +18,13 @@ export default function MusicPlayer() {
   const handleClick = () => {
     if (playing) {
       audioRef.current?.pause();
-      audioRef.current = null;
       setPlaying(false);
     } else {
       if (musicList.length === 0) return;
-      const track = musicList[0]; // always play the first (only) track
-      audioRef.current = new Audio(track);
+      if (!audioRef.current) {
+        audioRef.current = new Audio(musicList[0]);
+        audioRef.current.loop = true;
+      }
       audioRef.current.play().catch(() => {});
       setPlaying(true);
     }
