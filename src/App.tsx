@@ -3,6 +3,7 @@ import { AuthProvider } from './contexts/AuthContext'
 import { ThemeProvider } from './contexts/ThemeContext'
 import HomePage from './pages/HomePage'
 import NotePage from './pages/NotePage'
+import MusicPlayer from './components/MusicPlayer/MusicPlayer'
 
 function App() {
   return (
@@ -12,6 +13,7 @@ function App() {
           <Route path="/" element={<HomePage />} />
           <Route path="/notes/:category" element={<NotePage />} />
         </Routes>
+        <MusicPlayer />
       </AuthProvider>
     </ThemeProvider>
   )

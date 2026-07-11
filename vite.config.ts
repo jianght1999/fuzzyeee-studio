@@ -1,6 +1,6 @@
 import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react'
-import { writeFile, mkdir, unlink, readFile, rm, rename as fsRename } from 'node:fs/promises'
+import { writeFile, mkdir, unlink, readFile, rm, rename as fsRename, readdir } from 'node:fs/promises'
 import { resolve, dirname } from 'node:path'
 import type { IncomingMessage, ServerResponse } from 'node:http'
 
@@ -166,6 +166,15 @@ function editorPlugin(): any {
         } catch (err) {
           sendJSON(res, { success: false, error: String(err) }, 500)
         }
+      })
+
+      server.middlewares.use('/api/music-list', async (_req: IncomingMessage, res: ServerResponse) => {
+        try {
+          const musicDir = resolve(process.cwd(), 'public/music')
+          const files = await readdir(musicDir).catch(() => [] as string[])
+          const mp3s = files.filter(f => f.endsWith('.mp3')).map(f => `/music/${f}`)
+          sendJSON(res, mp3s)
+        } catch { sendJSON(res, []) }
       })
 
       server.middlewares.use('/api/recent', async (req: IncomingMessage, res: ServerResponse) => {

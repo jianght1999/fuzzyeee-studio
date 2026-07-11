@@ -1,0 +1,24 @@
+.player {
+  position: fixed;
+  bottom: 24px;
+  right: 24px;
+  z-index: 99;
+  cursor: pointer;
+  image-rendering: pixelated;
+  transition: transform 0.1s step-end;
+}
+
+.player:hover {
+  transform: scale(1.1);
+}
+
+.player:active {
+  transform: scale(0.95);
+}
+
+.cat {
+  width: 64px;
+  height: 64px;
+  image-rendering: pixelated;
+  display: block;
+}
