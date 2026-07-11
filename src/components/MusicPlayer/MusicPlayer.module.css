@@ -17,8 +17,8 @@
 }
 
 .cat {
-  width: 96px;
-  height: 96px;
+  width: 192px;
+  height: 192px;
   image-rendering: pixelated;
   display: block;
 }
