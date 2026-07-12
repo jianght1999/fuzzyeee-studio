@@ -1,7 +1,7 @@
 import { useParams, useSearchParams, Link } from 'react-router-dom';
 import { useState, useMemo, useEffect, useCallback, useRef } from 'react';
 import { categories } from '../data/categories';
-import { useMarkdownPages } from '../hooks/useMarkdownPages';
+import { usePages, usePageContent } from '../hooks/usePages';
 import { useAuth } from '../contexts/AuthContext';
 import { useTheme } from '../contexts/ThemeContext';
 import LoginModal from '../components/LoginModal/LoginModal';
@@ -27,7 +27,7 @@ export default function NotePage() {
   const { theme, toggle: toggleTheme } = useTheme();
   const categoryInfo = categories.find(c => c.slug === category);
 
-  const { pages } = useMarkdownPages(category || '');
+  const { pages, loading } = usePages(category || '');
 
   const sortedPages = useMemo(() => {
     // Apply title overrides
@@ -64,13 +64,15 @@ export default function NotePage() {
     setEditing(false);
   }, [activeSlug]);
 
+  const fetchedContent = usePageContent(category || '', activeSlug);
+
   const activePage = useMemo(
     () => sortedPages.find(p => p.slug === activeSlug),
     [sortedPages, activeSlug]
   );
 
   const displayContent = activePage
-    ? (editedContent[activePage.slug] ?? activePage.content)
+    ? (editedContent[activePage.slug] ?? fetchedContent ?? '')
     : '';
 
   const filePath = activePage
@@ -238,7 +240,9 @@ export default function NotePage() {
         />
 
         <main className={styles.content}>
-          {activePage ? (
+          {loading ? (
+            <p className={styles.emptyHint}>加载中...</p>
+          ) : activePage ? (
             editing ? (
               <RichTextEditor
                 content={displayContent}

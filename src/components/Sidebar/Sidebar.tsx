@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
-import type { Page } from '../../hooks/useMarkdownPages';
+import type { Page } from '../../hooks/usePages';
 import styles from './Sidebar.module.css';
 
 interface SidebarProps {
