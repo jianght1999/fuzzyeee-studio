@@ -1,2 +1,3 @@
-# Cloudflare Pages SPA routing — all paths serve index.html
-/*    /index.html   200
+# SPA routing — 只有前端路由走 index.html，/api/* 放行给 Worker
+/          /index.html   200
+/notes/*   /index.html   200
