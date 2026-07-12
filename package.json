@@ -7,7 +7,10 @@
     "dev": "vite",
     "build": "tsc -b && vite build",
     "lint": "oxlint",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "worker:dev": "cd workers && wrangler dev",
+    "worker:deploy": "cd workers && wrangler deploy",
+    "db:init": "cd workers && npx wrangler d1 execute pixel-notes-db --remote --file=../migration.sql"
   },
   "dependencies": {
     "react": "^19.2.7",
