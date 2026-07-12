@@ -7,14 +7,12 @@ export interface Category {
   emoji: string;
 }
 
-const B = import.meta.env.BASE_URL;
-
 export const categories: Category[] = [
   {
     slug: 'guitar',
     title: 'jazz',
     description: '',
-    image: B + 'images/jazz.png',
+    image: '/images/jazz.png',
     isAvailable: true,
     emoji: '🎷',
   },
@@ -22,7 +20,7 @@ export const categories: Category[] = [
     slug: 'synth',
     title: 'crafts',
     description: '',
-    image: B + 'images/crafts.png',
+    image: '/images/crafts.png',
     isAvailable: true,
     emoji: '🎛️',
   },
@@ -30,7 +28,7 @@ export const categories: Category[] = [
     slug: 'reading',
     title: 'writing',
     description: '',
-    image: B + 'images/writing.png',
+    image: '/images/writing.png',
     isAvailable: true,
     emoji: '📚',
   },
@@ -38,7 +36,7 @@ export const categories: Category[] = [
     slug: 'coming-soon',
     title: 'coming soon',
     description: '',
-    image: B + 'images/coming-soon.png',
+    image: '/images/coming-soon.png',
     isAvailable: false,
     emoji: '❓',
   },
