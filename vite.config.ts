@@ -197,7 +197,6 @@ function editorPlugin(): any {
         if (!url.startsWith('/api/pages/') && url !== '/api/pages') {
           return next()
         }
-        console.log('[api/pages] 收到请求:', req.method, url)
         if (req.method !== 'GET') return
 
         const path = decodeURIComponent(url.replace('/api/pages', '').replace(/^\//, ''))
@@ -274,9 +273,8 @@ function editorPlugin(): any {
               return a.slug.localeCompare(b.slug)
             })
 
-            console.log('[api/pages] 返回列表:', category, pageList.length, '篇')
             sendJSON(res, { pages: pageList })
-          } catch (err) { console.error('[api/pages] 列表错误:', err); sendJSON(res, { pages: [] }) }
+          } catch (err) { sendJSON(res, { pages: [] }) }
         } else {
           // GET /api/pages/:category/:slug → 单篇内容
           try {

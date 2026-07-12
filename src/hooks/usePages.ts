@@ -16,12 +16,9 @@ export function usePages(category: string) {
 
   useEffect(() => {
     setLoading(true);
-    const apiUrl = `/api/pages/${category}`;
-    console.log('[usePages] 请求:', apiUrl);
-    fetch(apiUrl)
+    fetch(`/api/pages/${category}`)
       .then(r => r.json())
       .then(data => {
-        console.log('[usePages] 收到:', data.pages?.length || 0, '篇');
         const raw = data.pages || [];
         setPages(raw.map((p: any) => ({
           slug: p.slug,
@@ -31,7 +28,7 @@ export function usePages(category: string) {
           sortOrder: p.sortOrder ?? 0,
         })));
       })
-      .catch(err => { console.error('[usePages] 请求失败:', err); setPages([]); })
+      .catch(() => setPages([]))
       .finally(() => setLoading(false));
   }, [category]);
 
