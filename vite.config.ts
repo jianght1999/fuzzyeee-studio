@@ -80,6 +80,7 @@ function editorPlugin(): any {
   return {
     name: 'editor-api',
     configureServer(server: any) {
+      console.log('\n🔑 编辑器密码: ' + PASSWORD + '\n')
       server.middlewares.use('/api/login', async (req: IncomingMessage, res: ServerResponse) => {
         if (req.method !== 'POST') return
         const body = await parseBody(req)
