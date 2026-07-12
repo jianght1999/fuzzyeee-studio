@@ -33,6 +33,30 @@ async function authMiddleware(c: any, next: any) {
   await next();
 }
 
+// ---- 辅助函数 ----
+
+// 从 HTML 提取 h1 标题
+function extractTitle(content: string): string {
+  const m = content.match(/<h1[^>]*>(.+?)<\/h1>/i);
+  return m ? m[1].replace(/<[^>]+>/g, '').trim() : 'Untitled';
+}
+
+// 从 slug 获取父 slug（如 "Comping/drop 2" → "Comping"，"Blues" → null）
+function getParentSlug(slug: string): string | null {
+  const parts = slug.split('/');
+  return parts.length > 1 ? parts.slice(0, -1).join('/') : null;
+}
+
+// 从文件路径解析 category 和 slug
+// 输入："src/content/guitar/Comping/drop 2.html" → { category: "guitar", slug: "Comping/drop 2" }
+// 输入："src/content/guitar/Blues.html" → { category: "guitar", slug: "Blues" }
+function parsePath(p: string): { category: string; slug: string } {
+  const cleaned = p.replace(/\\/g, '/').replace(/^src\/content\//, '').replace(/\.html$/, '');
+  const idx = cleaned.indexOf('/');
+  if (idx === -1) return { category: cleaned, slug: cleaned };
+  return { category: cleaned.substring(0, idx), slug: cleaned.substring(idx + 1) };
+}
+
 // ---- POST /api/login ----
 app.post('/api/login', async (c) => {
   await ensureSchema(c.env.DB);
@@ -65,6 +89,176 @@ app.post('/api/logout', async (c) => {
 app.get('/api/health', async (c) => {
   await ensureSchema(c.env.DB);
   return c.json({ ok: true });
+});
+
+// ---- GET /api/pages/:category — 获取分类下页面列表 ----
+app.get('/api/pages/:category', async (c) => {
+  await ensureSchema(c.env.DB);
+  const category = c.req.param('category');
+  const { results } = await c.env.DB.prepare(
+    'SELECT slug, title, parent_slug as parentSlug, sort_order as sortOrder FROM notes WHERE category = ? ORDER BY sort_order ASC'
+  ).bind(category).all<{ slug: string; title: string; parentSlug: string | null; sortOrder: number }>();
+
+  const slugsWithChildren = new Set<string>();
+  for (const r of results) {
+    if (r.parentSlug) slugsWithChildren.add(r.parentSlug);
+  }
+  const pages = results.map(r => ({
+    slug: r.slug,
+    title: r.title,
+    parentSlug: r.parentSlug,
+    sortOrder: r.sortOrder,
+    hasChildren: slugsWithChildren.has(r.slug),
+  }));
+  return c.json({ pages });
+});
+
+// ---- GET /api/pages/:category/:slug — 获取单篇内容 ----
+app.get('/api/pages/:category/:slug{.*}', async (c) => {
+  await ensureSchema(c.env.DB);
+  const category = c.req.param('category');
+  let slug = c.req.param('slug');
+  if (slug.startsWith('/')) slug = slug.slice(1);
+
+  const row = await c.env.DB.prepare(
+    'SELECT slug, title, content, parent_slug as parentSlug, updated_at as updatedAt FROM notes WHERE category = ? AND slug = ?'
+  ).bind(category, slug).first<{ slug: string; title: string; content: string; parentSlug: string | null; updatedAt: number }>();
+
+  if (!row) return c.json({ error: 'not found' }, 404);
+  return c.json(row);
+});
+
+// ---- POST /api/save — 保存笔记 ----
+app.post('/api/save', authMiddleware, async (c) => {
+  const body = (c as any).get('body') as { path: string; content: string };
+  const { category, slug } = parsePath(body.path);
+
+  const title = extractTitle(body.content);
+  const now = Date.now();
+
+  await c.env.DB.prepare(
+    `INSERT OR REPLACE INTO notes (slug, category, title, content, parent_slug, sort_order, updated_at)
+     VALUES (?, ?, ?, ?, ?, COALESCE((SELECT sort_order FROM notes WHERE slug = ? AND category = ?), 0), ?)`
+  ).bind(slug, category, title, body.content, getParentSlug(slug), slug, category, now).run();
+
+  // 更新最近文件
+  await c.env.DB.prepare(
+    `INSERT OR REPLACE INTO recent_files (path, title, category, time) VALUES (?, ?, ?, ?)`
+  ).bind(body.path, title, category, now).run();
+
+  return c.json({ success: true });
+});
+
+// ---- POST /api/create-page — 创建新页面 ----
+app.post('/api/create-page', authMiddleware, async (c) => {
+  const body = (c as any).get('body') as { path: string; content?: string };
+  const { category, slug } = parsePath(body.path);
+
+  const htmlContent = body.content || `<h1>${slug.split('/').pop()}</h1>\n<p></p>`;
+  const title = extractTitle(htmlContent);
+  const now = Date.now();
+
+  await c.env.DB.prepare(
+    `INSERT INTO notes (slug, category, title, content, parent_slug, sort_order, updated_at)
+     VALUES (?, ?, ?, ?, ?, 0, ?)`
+  ).bind(slug, category, title, htmlContent, getParentSlug(slug), now).run();
+
+  return c.json({ success: true });
+});
+
+// ---- POST /api/delete-page — 删除页面（含子页面） ----
+app.post('/api/delete-page', authMiddleware, async (c) => {
+  const body = (c as any).get('body') as { path: string };
+  const { category, slug } = parsePath(body.path);
+
+  // 删除所有子页面
+  await c.env.DB.prepare('DELETE FROM notes WHERE category = ? AND slug LIKE ?')
+    .bind(category, slug + '/%').run();
+  // 删除页面本身
+  await c.env.DB.prepare('DELETE FROM notes WHERE category = ? AND slug = ?')
+    .bind(category, slug).run();
+  // 删除最近记录
+  await c.env.DB.prepare('DELETE FROM recent_files WHERE path = ?').bind(body.path).run();
+
+  return c.json({ success: true });
+});
+
+// ---- POST /api/rename-page — 重命名页面 ----
+app.post('/api/rename-page', authMiddleware, async (c) => {
+  const body = (c as any).get('body') as { oldPath: string; newPath: string };
+  const oldP = parsePath(body.oldPath);
+  const newP = parsePath(body.newPath);
+
+  // 更新子页面的 parent_slug（D1 不支持 REPLACE 函数，改用逐条更新）
+  const { results: children } = await c.env.DB.prepare(
+    'SELECT slug FROM notes WHERE category = ? AND parent_slug = ?'
+  ).bind(oldP.category, oldP.slug).all<{ slug: string }>();
+
+  for (const child of children) {
+    const newChildSlug = newP.slug + '/' + child.slug.split('/').pop();
+    await c.env.DB.prepare(
+      'UPDATE notes SET slug = ?, category = ?, parent_slug = ? WHERE category = ? AND slug = ?'
+    ).bind(newChildSlug, newP.category, newP.slug, oldP.category, child.slug).run();
+  }
+
+  // 更新页面本身
+  await c.env.DB.prepare(
+    'UPDATE notes SET slug = ?, category = ? WHERE category = ? AND slug = ?'
+  ).bind(newP.slug, newP.category, oldP.category, oldP.slug).run();
+
+  // 更新最近文件
+  await c.env.DB.prepare(
+    'UPDATE recent_files SET path = ? WHERE path = ?'
+  ).bind(body.newPath, body.oldPath).run();
+
+  return c.json({ success: true });
+});
+
+// ---- POST /api/move-page — 移动页面 ----
+app.post('/api/move-page', authMiddleware, async (c) => {
+  const body = (c as any).get('body') as { oldPath: string; newPath: string };
+  const oldP = parsePath(body.oldPath);
+  const newP = parsePath(body.newPath);
+
+  // 更新页面本身的 category, slug, parent_slug
+  await c.env.DB.prepare(
+    'UPDATE notes SET slug = ?, category = ?, parent_slug = ? WHERE category = ? AND slug = ?'
+  ).bind(newP.slug, newP.category, getParentSlug(newP.slug), oldP.category, oldP.slug).run();
+
+  // 迁移子页面
+  const { results: children } = await c.env.DB.prepare(
+    'SELECT slug FROM notes WHERE category = ? AND parent_slug = ?'
+  ).bind(oldP.category, oldP.slug).all<{ slug: string }>();
+
+  for (const child of children) {
+    const newChildSlug = newP.slug + '/' + child.slug.split('/').pop();
+    await c.env.DB.prepare(
+      'UPDATE notes SET slug = ?, category = ?, parent_slug = ? WHERE category = ? AND slug = ?'
+    ).bind(newChildSlug, newP.category, newP.slug, oldP.category, child.slug).run();
+  }
+
+  return c.json({ success: true });
+});
+
+// ---- GET /api/recent — 最近文件列表 ----
+app.get('/api/recent', async (c) => {
+  await ensureSchema(c.env.DB);
+  const { results } = await c.env.DB.prepare(
+    'SELECT path, title, category, time FROM recent_files ORDER BY time DESC LIMIT 50'
+  ).all<{ path: string; title: string; category: string; time: number }>();
+  return c.json(results);
+});
+
+// ---- POST /api/recent-delete — 删除最近文件记录 ----
+app.post('/api/recent-delete', authMiddleware, async (c) => {
+  const body = (c as any).get('body') as { path: string };
+  await c.env.DB.prepare('DELETE FROM recent_files WHERE path = ?').bind(body.path).run();
+  return c.json({ success: true });
+});
+
+// ---- GET /api/music-list — 音乐列表 ----
+app.get('/api/music-list', async (c) => {
+  return c.json(['/music/waltz-for-debby.mp3']);
 });
 
 export default app;
