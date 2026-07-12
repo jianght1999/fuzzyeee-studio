@@ -1,0 +1,25 @@
+# Cloudflare Pages headers — cache & security
+
+# Static assets with content hash — cache aggressively
+/assets/*
+  Cache-Control: public, max-age=31536000, immutable
+
+# Fonts — cache for 1 year
+/fonts/*
+  Cache-Control: public, max-age=31536000
+
+# Images and cursors — cache for 1 week
+/images/*
+  Cache-Control: public, max-age=604800
+/cursors/*
+  Cache-Control: public, max-age=604800
+
+# HTML — never cache (SPA entry point)
+/index.html
+  Cache-Control: no-cache, no-store, must-revalidate
+
+# Security headers for all pages
+/*
+  X-Content-Type-Options: nosniff
+  X-Frame-Options: DENY
+  Referrer-Policy: strict-origin-when-cross-origin
