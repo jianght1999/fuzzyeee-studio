@@ -215,7 +215,9 @@ function editorPlugin(): any {
 
             for (const f of files) {
               if (!f.endsWith('.html')) continue
-              const relPath = f.replace(contentDir.replace(/\\/g, '/'), '').replace(/\\/g, '/')
+              const fNorm = f.replace(/\\/g, '/')
+              const dirNorm = contentDir.replace(/\\/g, '/')
+              const relPath = fNorm.replace(dirNorm, '')
               const slug = relPath.replace(/^\//, '').replace(/\.html$/, '')
               const slugParts = slug.split('/')
               const pSlug = slugParts.length > 1 ? slugParts.slice(0, -1).join('/') : null
