@@ -148,11 +148,21 @@ export default function Sidebar({
             const draggedParent = dragged.parentSlug ?? null;
             const targetParent = page.parentSlug;
 
-            // 有子页面的父目录不允许改变层级，只能同级排序
-            const isCrossParent = draggedParent !== targetParent || (!draggedParent && !targetParent && ds !== page.slug);
-            if (dragged.hasChildren && isCrossParent) return;
+            // 有子页面的父目录不允许改变层级 — 强制转为本级排序
+            if (dragged.hasChildren) {
+              const siblings = draggedParent ? pages.filter(p => p.parentSlug === draggedParent) : pages.filter(p => !p.parentSlug);
+              const slugs = siblings.map(p => p.slug.replace(/^.*\//, ''));
+              const dn = ds.replace(/^.*\//, '');
+              const tn = page.slug.replace(/^.*\//, '');
+              const fi = slugs.indexOf(dn), ti = slugs.indexOf(tn);
+              if (fi === -1 || ti === -1) return;
+              slugs.splice(fi, 1); slugs.splice(ti, 0, dn);
+              onReorder?.(slugs, draggedParent);
+              return;
+            }
 
-            // Cross-parent move
+            // Cross-parent move（普通页面可以改变层级）
+            const isCrossParent = draggedParent !== targetParent || (!draggedParent && !targetParent && ds !== page.slug);
             if (isCrossParent) {
               const newParent = page.parentSlug !== null ? page.parentSlug : page.slug.replace(/^.*\//, '');
               onMove?.(ds, draggedParent ?? null, newParent || null);
