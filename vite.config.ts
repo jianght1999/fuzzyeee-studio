@@ -192,8 +192,8 @@ function editorPlugin(): any {
       // ---- GET /api/pages/:category ---- 获取分类页面列表
       server.middlewares.use('/api/pages', async (req: IncomingMessage, res: ServerResponse) => {
         if (req.method !== 'GET') return
-        const url = new URL(req.url || '', 'http://localhost')
-        const parts = url.pathname.replace('/api/pages/', '').split('/').filter(Boolean)
+        // Connect 会把 /api/pages 前缀从 req.url 中去掉，所以这里直接解析剩余路径
+        const parts = decodeURIComponent(req.url || '').replace(/^\//, '').split('/').filter(Boolean)
         if (parts.length === 0) return
 
         const category = parts[0]
