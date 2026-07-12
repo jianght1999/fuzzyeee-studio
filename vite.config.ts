@@ -55,6 +55,27 @@ async function updateRecent(filePath: string) {
   } catch { /* ignore */ }
 }
 
+function extractTitle(content: string): string {
+  const m = content.match(/<h1[^>]*>(.+?)<\/h1>/i)
+  return m ? m[1].replace(/<[^>]+>/g, '').trim() : 'Untitled'
+}
+
+async function walkDir(dir: string): Promise<string[]> {
+  const results: string[] = []
+  async function walk(d: string) {
+    try {
+      const entries = await readdir(d, { withFileTypes: true })
+      for (const e of entries) {
+        const full = resolve(d, e.name)
+        if (e.isDirectory()) await walk(full)
+        else results.push(full)
+      }
+    } catch {}
+  }
+  await walk(dir)
+  return results
+}
+
 function editorPlugin(): any {
   return {
     name: 'editor-api',
@@ -168,6 +189,80 @@ function editorPlugin(): any {
         }
       })
 
+      // ---- GET /api/pages/:category ---- 获取分类页面列表
+      server.middlewares.use('/api/pages', async (req: IncomingMessage, res: ServerResponse) => {
+        if (req.method !== 'GET') return
+        const url = new URL(req.url || '', 'http://localhost')
+        const parts = url.pathname.replace('/api/pages/', '').split('/').filter(Boolean)
+        if (parts.length === 0) return
+
+        const category = parts[0]
+        const contentDir = resolve(process.cwd(), 'src', 'content', category)
+
+        if (parts.length === 1) {
+          // /api/pages/:category → 返回页面列表（元数据）
+          try {
+            const files = await walkDir(contentDir)
+            const pages: any[] = []
+            const slugsWithChildren = new Set<string>()
+
+            for (const f of files) {
+              if (!f.endsWith('.html')) continue
+              const relPath = f.replace(contentDir.replace(/\\/g, '/'), '').replace(/\\/g, '/')
+              const slug = relPath.replace(/^\//, '').replace(/\.html$/, '')
+              const slugParts = slug.split('/')
+              const parentSlug = slugParts.length > 1 ? slugParts.slice(0, -1).join('/') : null
+              if (parentSlug) slugsWithChildren.add(parentSlug)
+
+              const raw = await readFile(f, 'utf-8')
+              const title = extractTitle(raw)
+              // 读 order.json 取 sort_order
+              const leafName = slugParts.pop()!
+              const parentDir = parentSlug
+                ? resolve(contentDir, parentSlug)
+                : contentDir
+              let sortOrder = -1
+              try {
+                const orderRaw = await readFile(resolve(parentDir, '.order.json'), 'utf-8')
+                const order = JSON.parse(orderRaw)
+                if (Array.isArray(order)) sortOrder = order.indexOf(leafName)
+              } catch {}
+
+              pages.push({ slug, title, parentSlug, sortOrder: sortOrder >= 0 ? sortOrder : 0, hasChildren: false })
+            }
+
+            for (const p of pages) {
+              if (slugsWithChildren.has(p.slug)) p.hasChildren = true
+            }
+
+            pages.sort((a, b) => {
+              if (!a.parentSlug && b.parentSlug) return -1
+              if (a.parentSlug && !b.parentSlug) return 1
+              if (a.parentSlug === b.parentSlug) return a.sortOrder - b.sortOrder
+              if (a.parentSlug && b.parentSlug) return a.parentSlug.localeCompare(b.parentSlug)
+              return 0
+            })
+
+            sendJSON(res, { pages })
+          } catch (err) {
+            sendJSON(res, { pages: [] })
+          }
+        } else {
+          // /api/pages/:category/:slug → 返回单篇内容
+          try {
+            const slug = parts.slice(1).join('/')
+            const filePath = resolve(contentDir, slug + '.html')
+            const raw = await readFile(filePath, 'utf-8')
+            const title = extractTitle(raw)
+            const slugParts = slug.split('/')
+            const parentSlug = slugParts.length > 1 ? slugParts.slice(0, -1).join('/') : null
+            sendJSON(res, { slug, title, content: raw, parentSlug, updatedAt: Date.now() })
+          } catch {
+            sendJSON(res, { error: 'not found' }, 404)
+          }
+        }
+      })
+
       server.middlewares.use('/api/music-list', async (_req: IncomingMessage, res: ServerResponse) => {
         try {
           const musicDir = resolve(process.cwd(), 'public/music')
@@ -249,7 +344,7 @@ function editorPlugin(): any {
   }
 }
 
-export default defineConfig(({ mode }) => ({
-  base: mode === 'production' ? '/fuzzyeee-studio/' : '/',
+export default defineConfig(() => ({
+  base: '/',
   plugins: [react(), editorPlugin()],
 }))
