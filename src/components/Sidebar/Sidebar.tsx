@@ -144,13 +144,16 @@ export default function Sidebar({
             const ds = e.dataTransfer.getData('text/plain');
             if (!ds || ds === page.slug) return;
             const dragged = pages.find(p => p.slug === ds);
-            const draggedParent = dragged?.parentSlug ?? null;
+            if (!dragged) return;
+            const draggedParent = dragged.parentSlug ?? null;
             const targetParent = page.parentSlug;
-            // Cross-parent move (including root→root = make child)
-            if (draggedParent !== targetParent || (!draggedParent && !targetParent && ds !== page.slug)) {
-              // When dropping onto a ROOT page, make it a child of that page
-              // When dropping onto a SUB-page, make it a sibling (same parent)
-              // New parent: target's own slug if dropping onto a root page, otherwise target's parent
+
+            // 有子页面的父目录不允许改变层级，只能同级排序
+            const isCrossParent = draggedParent !== targetParent || (!draggedParent && !targetParent && ds !== page.slug);
+            if (dragged.hasChildren && isCrossParent) return;
+
+            // Cross-parent move
+            if (isCrossParent) {
               const newParent = page.parentSlug !== null ? page.parentSlug : page.slug.replace(/^.*\//, '');
               onMove?.(ds, draggedParent ?? null, newParent || null);
               return;
