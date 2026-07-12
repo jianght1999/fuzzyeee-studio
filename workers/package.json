@@ -8,11 +8,12 @@
     "deploy": "wrangler deploy"
   },
   "dependencies": {
-    "hono": "^4.6.5",
-    "bcryptjs": "^2.4.3"
+    "bcryptjs": "^2.4.3",
+    "hono": "^4.6.5"
   },
   "devDependencies": {
     "@cloudflare/workers-types": "^5.20260708.1",
+    "@types/bcryptjs": "^2.4.6",
     "wrangler": "^4.1.0"
   }
 }
