@@ -199,7 +199,7 @@ function editorPlugin(): any {
         console.log('[api/pages] 收到请求:', req.method, url)
         if (req.method !== 'GET') return
 
-        const path = url.replace('/api/pages', '').replace(/^\//, '')
+        const path = decodeURIComponent(url.replace('/api/pages', '').replace(/^\//, ''))
         const parts = path.split('/').filter(Boolean)
         if (parts.length === 0) return
 
@@ -209,11 +209,25 @@ function editorPlugin(): any {
         if (parts.length === 1) {
           // GET /api/pages/:category → 页面列表
           try {
-            const files = await walkDir(contentDir)
+            const allFiles = await walkDir(contentDir)
             const pageList: any[] = []
             const slugsWithChildren = new Set<string>()
 
-            for (const f of files) {
+            // 预加载所有 .order.json 进缓存
+            const orderCache = new Map<string, string[]>()
+            for (const f of allFiles) {
+              if (!f.endsWith('.order.json')) continue
+              const fNorm = f.replace(/\\/g, '/')
+              const dirNorm = contentDir.replace(/\\/g, '/')
+              const key = fNorm.replace(dirNorm, '').replace(/^\//, '').replace('/.order.json', '') || '__root__'
+              try {
+                const raw = await readFile(f, 'utf-8')
+                const order = JSON.parse(raw)
+                if (Array.isArray(order)) orderCache.set(key, order)
+              } catch {}
+            }
+
+            for (const f of allFiles) {
               if (!f.endsWith('.html')) continue
               const fNorm = f.replace(/\\/g, '/')
               const dirNorm = contentDir.replace(/\\/g, '/')
@@ -225,28 +239,38 @@ function editorPlugin(): any {
 
               const raw = await readFile(f, 'utf-8')
               const title = extractTitle(raw)
-              const leaf = slugParts[slugParts.length - 1]
-              const orderDir = pSlug ? resolve(contentDir, pSlug) : contentDir
-              let sortOrder = -1
-              try {
-                const orderRaw = await readFile(resolve(orderDir, '.order.json'), 'utf-8')
-                const order = JSON.parse(orderRaw)
-                if (Array.isArray(order)) sortOrder = order.indexOf(leaf)
-              } catch {}
-
-              pageList.push({ slug, title, parentSlug: pSlug, sortOrder: sortOrder >= 0 ? sortOrder : 0, hasChildren: false })
+              pageList.push({ slug, title, parentSlug: pSlug, hasChildren: false })
             }
 
             for (const p of pageList) {
               if (slugsWithChildren.has(p.slug)) p.hasChildren = true
             }
 
+            // 复用原始 useMarkdownPages 的排序逻辑
+            const rootOrder = orderCache.get('__root__') || []
             pageList.sort((a: any, b: any) => {
               if (!a.parentSlug && b.parentSlug) return -1
               if (a.parentSlug && !b.parentSlug) return 1
-              if (a.parentSlug === b.parentSlug) return a.sortOrder - b.sortOrder
-              if (a.parentSlug && b.parentSlug) return a.parentSlug.localeCompare(b.parentSlug)
-              return 0
+
+              const leafA = a.slug.split('/').pop() || ''
+              const leafB = b.slug.split('/').pop() || ''
+
+              if (a.parentSlug && b.parentSlug) {
+                if (a.parentSlug !== b.parentSlug) return a.parentSlug.localeCompare(b.parentSlug)
+                const o = orderCache.get(a.parentSlug) || []
+                const ai = o.indexOf(leafA), bi = o.indexOf(leafB)
+                if (ai !== -1 && bi !== -1) return ai - bi
+                if (ai !== -1) return -1
+                if (bi !== -1) return 1
+              }
+
+              const ai = rootOrder.indexOf(leafA), bi = rootOrder.indexOf(leafB)
+              if (ai !== -1 && bi !== -1) return ai - bi
+              if (ai !== -1) return -1
+              if (bi !== -1) return 1
+              if (leafA === 'overview') return -1
+              if (leafB === 'overview') return 1
+              return a.slug.localeCompare(b.slug)
             })
 
             console.log('[api/pages] 返回列表:', category, pageList.length, '篇')
