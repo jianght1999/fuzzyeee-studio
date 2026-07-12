@@ -5,7 +5,11 @@ compatibility_date = "2025-07-01"
 [[d1_databases]]
 binding = "DB"
 database_name = "pixel-notes-db"
-database_id = ""
+database_id = "3923e37f-79e1-447a-997e-a5e98f570c3b"
+
+[[kv_namespaces]]
+binding = "NOTES_CONTENT"
+id = "92ba09c7861f4d7aba7986ce6e528ab2"
 
 [observability]
 enabled = true

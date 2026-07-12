@@ -10,27 +10,39 @@ export default function ImageUploadModal({ onInsert, onClose }: ImageUploadModal
   const [daySrc, setDaySrc] = useState<string | null>(null);
   const [nightSrc, setNightSrc] = useState<string | null>(null);
   const [mode, setMode] = useState<'dual' | 'single'>('dual');
+  const [uploading, setUploading] = useState(false);
   const dayRef = useRef<HTMLInputElement>(null);
   const nightRef = useRef<HTMLInputElement>(null);
   const singleRef = useRef<HTMLInputElement>(null);
 
-  const readFile = (file: File): Promise<string> => new Promise(resolve => {
-    const reader = new FileReader();
-    reader.onload = () => resolve(reader.result as string);
-    reader.readAsDataURL(file);
-  });
+  // 上传图片到 Worker → KV，返回 URL
+  const upload = async (file: File): Promise<string> => {
+    const formData = new FormData();
+    formData.append('file', file);
+    formData.append('token', sessionStorage.getItem('pixel_notes_token') || '');
+
+    const res = await fetch('/api/upload-image', { method: 'POST', body: formData });
+    const data = await res.json();
+    if (data.success) return data.url;
+    // 如果 Worker 不可用（dev 模式），回退到 base64
+    return new Promise(resolve => {
+      const reader = new FileReader();
+      reader.onload = () => resolve(reader.result as string);
+      reader.readAsDataURL(file);
+    });
+  };
 
   const handleDay = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const f = e.target.files?.[0]; if (f) setDaySrc(await readFile(f));
+    const f = e.target.files?.[0]; if (f) { setUploading(true); setDaySrc(await upload(f)); setUploading(false); }
   };
   const handleNight = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const f = e.target.files?.[0]; if (f) setNightSrc(await readFile(f));
+    const f = e.target.files?.[0]; if (f) { setUploading(true); setNightSrc(await upload(f)); setUploading(false); }
   };
   const handleSingle = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const f = e.target.files?.[0]; if (f) { const src = await readFile(f); setDaySrc(src); setNightSrc(src); }
+    const f = e.target.files?.[0]; if (f) { setUploading(true); const src = await upload(f); setDaySrc(src); setNightSrc(src); setUploading(false); }
   };
 
-  const canInsert = mode === 'single' ? !!daySrc : (!!daySrc || !!nightSrc);
+  const canInsert = !uploading && (mode === 'single' ? !!daySrc : (!!daySrc || !!nightSrc));
 
   return (
     <div className={styles.overlay} onClick={e => { if (e.target === e.currentTarget) onClose(); }}>

@@ -5,6 +5,7 @@ import { generateToken, validateToken, invalidateToken, hashPassword, verifyPass
 
 type Env = {
   DB: D1Database;
+  NOTES_CONTENT: KVNamespace;
 };
 
 const app = new Hono<{ Bindings: Env }>();
@@ -125,7 +126,10 @@ app.get('/api/pages/:category/:slug{.*}', async (c) => {
   ).bind(category, slug).first<{ slug: string; title: string; content: string; parentSlug: string | null; updatedAt: number }>();
 
   if (!row) return c.json({ error: 'not found' }, 404);
-  return c.json(row);
+
+  // KV 优先（大文件），D1 content 字段作为 fallback
+  const kvContent = await c.env.NOTES_CONTENT.get(`content/${category}/${slug}`);
+  return c.json({ ...row, content: kvContent || row.content });
 });
 
 // ---- POST /api/save — 保存笔记 ----
@@ -135,11 +139,19 @@ app.post('/api/save', authMiddleware, async (c) => {
 
   const title = extractTitle(body.content);
   const now = Date.now();
+  const KV_THRESHOLD = 90 * 1024; // 超过 90KB 存 KV
 
   await c.env.DB.prepare(
     `INSERT OR REPLACE INTO notes (slug, category, title, content, parent_slug, sort_order, updated_at)
      VALUES (?, ?, ?, ?, ?, COALESCE((SELECT sort_order FROM notes WHERE slug = ? AND category = ?), 0), ?)`
-  ).bind(slug, category, title, body.content, getParentSlug(slug), slug, category, now).run();
+  ).bind(slug, category, title, body.content.length > KV_THRESHOLD ? '' : body.content, getParentSlug(slug), slug, category, now).run();
+
+  // 大文件存 KV
+  if (body.content.length > KV_THRESHOLD) {
+    await c.env.NOTES_CONTENT.put(`content/${category}/${slug}`, body.content);
+  } else {
+    await c.env.NOTES_CONTENT.delete(`content/${category}/${slug}`).catch(() => {});
+  }
 
   // 更新最近文件
   await c.env.DB.prepare(
@@ -171,6 +183,8 @@ app.post('/api/delete-page', authMiddleware, async (c) => {
   const body = (c as any).get('body') as { path: string };
   const { category, slug } = parsePath(body.path);
 
+  // 删除 KV 内容
+  await c.env.NOTES_CONTENT.delete(`content/${category}/${slug}`).catch(() => {});
   // 删除所有子页面
   await c.env.DB.prepare('DELETE FROM notes WHERE category = ? AND slug LIKE ?')
     .bind(category, slug + '/%').run();
@@ -259,6 +273,38 @@ app.post('/api/recent-delete', authMiddleware, async (c) => {
 // ---- GET /api/music-list — 音乐列表 ----
 app.get('/api/music-list', async (c) => {
   return c.json(['/music/waltz-for-debby.mp3']);
+});
+
+// ---- POST /api/upload-image — 上传图片存 KV ----
+app.post('/api/upload-image', async (c) => {
+  const formData = await c.req.formData();
+  const token = formData.get('token') as string;
+  if (!validateToken(token || '')) {
+    return c.json({ error: 'not authenticated' }, 403);
+  }
+  const file = formData.get('file') as File;
+  if (!file) return c.json({ error: 'no file' }, 400);
+
+  const ext = file.name.split('.').pop() || 'png';
+  const key = `img/${Date.now()}-${Math.random().toString(36).slice(2, 8)}.${ext}`;
+  const buffer = await file.arrayBuffer();
+
+  await c.env.NOTES_CONTENT.put(key, buffer);
+  return c.json({ success: true, url: `/api/images/${key}` });
+});
+
+// ---- GET /api/images/* — 从 KV 返回图片 ----
+app.get('/api/images/*', async (c) => {
+  const key = c.req.path.replace('/api/images/', '');
+  const data = await c.env.NOTES_CONTENT.get(key, 'arrayBuffer');
+  if (!data) return c.notFound();
+
+  const ext = key.split('.').pop() || 'png';
+  const mimeTypes: Record<string, string> = {
+    png: 'image/png', jpg: 'image/jpeg', jpeg: 'image/jpeg',
+    gif: 'image/gif', webp: 'image/webp', svg: 'image/svg+xml',
+  };
+  return c.body(data as ArrayBuffer, { headers: { 'Content-Type': mimeTypes[ext] || 'image/png', 'Cache-Control': 'public, max-age=31536000' } });
 });
 
 export default app;

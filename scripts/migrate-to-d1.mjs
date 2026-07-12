@@ -36,7 +36,7 @@ async function main() {
   const orderMap = new Map();
   for await (const f of walk(CONTENT_DIR)) {
     if (f.endsWith('.order.json')) {
-      const relPath = f.replace(CONTENT_DIR.replace(/\\/g, '/'), '').replace(/\\/g, '/');
+      const fNorm = f.replace(/\\/g, '/'); const dirNorm = CONTENT_DIR.replace(/\\/g, '/'); const relPath = fNorm.replace(dirNorm, '').replace(/\\/g, '/');
       const dirSlug = relPath.replace(/^\//, '').replace('/.order.json', '');
       try {
         const raw = await readFile(f, 'utf-8');
@@ -50,17 +50,18 @@ async function main() {
   for await (const f of walk(CONTENT_DIR)) {
     if (!f.endsWith('.html')) continue;
 
-    const relPath = f.replace(CONTENT_DIR.replace(/\\/g, '/'), '').replace(/\\/g, '/');
-    const slug = relPath.replace(/^\//, '').replace(/\.html$/, '');
-    const parts = slug.split('/');
-    const category = parts[0];
+    const fNorm = f.replace(/\\/g, '/'); const dirNorm = CONTENT_DIR.replace(/\\/g, '/'); const relPath = fNorm.replace(dirNorm, '').replace(/\\/g, '/');
+    const fullPath = relPath.replace(/^\//, '').replace(/\.html$/, '');
+    const pathParts = fullPath.split('/');
+    const category = pathParts[0];
+    const slug = pathParts.length > 1 ? pathParts.slice(1).join('/') : pathParts[0];
     const parentSlug = getParentSlug(slug);
 
     const content = await readFile(f, 'utf-8');
     const title = extractTitle(content);
 
     const leafName = slug.split('/').pop();
-    const parentKey = parentSlug ?? category;
+    const parentKey = parentSlug ? `${category}/${parentSlug}` : category;
     const order = orderMap.get(parentKey) || [];
     const sortOrder = order.indexOf(leafName);
 
