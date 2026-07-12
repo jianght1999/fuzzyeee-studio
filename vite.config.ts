@@ -189,21 +189,27 @@ function editorPlugin(): any {
         }
       })
 
-      // ---- GET /api/pages/:category ---- 获取分类页面列表
-      server.middlewares.use('/api/pages', async (req: IncomingMessage, res: ServerResponse) => {
+      // ---- GET /api/pages/:category 和 /api/pages/:category/:slug ----
+      // 用通用中间件自行解析路径，避免 Connect 路径剥离的不确定性
+      server.middlewares.use(async (req: IncomingMessage, res: ServerResponse, next: () => void) => {
+        const url = req.url || ''
+        if (!url.startsWith('/api/pages/') && url !== '/api/pages') {
+          return next()
+        }
         if (req.method !== 'GET') return
-        // Connect 会把 /api/pages 前缀从 req.url 中去掉，所以这里直接解析剩余路径
-        const parts = decodeURIComponent(req.url || '').replace(/^\//, '').split('/').filter(Boolean)
+
+        const path = url.replace('/api/pages', '').replace(/^\//, '')
+        const parts = path.split('/').filter(Boolean)
         if (parts.length === 0) return
 
         const category = parts[0]
         const contentDir = resolve(process.cwd(), 'src', 'content', category)
 
         if (parts.length === 1) {
-          // /api/pages/:category → 返回页面列表（元数据）
+          // GET /api/pages/:category → 页面列表
           try {
             const files = await walkDir(contentDir)
-            const pages: any[] = []
+            const pageList: any[] = []
             const slugsWithChildren = new Set<string>()
 
             for (const f of files) {
@@ -211,31 +217,28 @@ function editorPlugin(): any {
               const relPath = f.replace(contentDir.replace(/\\/g, '/'), '').replace(/\\/g, '/')
               const slug = relPath.replace(/^\//, '').replace(/\.html$/, '')
               const slugParts = slug.split('/')
-              const parentSlug = slugParts.length > 1 ? slugParts.slice(0, -1).join('/') : null
-              if (parentSlug) slugsWithChildren.add(parentSlug)
+              const pSlug = slugParts.length > 1 ? slugParts.slice(0, -1).join('/') : null
+              if (pSlug) slugsWithChildren.add(pSlug)
 
               const raw = await readFile(f, 'utf-8')
               const title = extractTitle(raw)
-              // 读 order.json 取 sort_order
-              const leafName = slugParts.pop()!
-              const parentDir = parentSlug
-                ? resolve(contentDir, parentSlug)
-                : contentDir
+              const leaf = slugParts[slugParts.length - 1]
+              const orderDir = pSlug ? resolve(contentDir, pSlug) : contentDir
               let sortOrder = -1
               try {
-                const orderRaw = await readFile(resolve(parentDir, '.order.json'), 'utf-8')
+                const orderRaw = await readFile(resolve(orderDir, '.order.json'), 'utf-8')
                 const order = JSON.parse(orderRaw)
-                if (Array.isArray(order)) sortOrder = order.indexOf(leafName)
+                if (Array.isArray(order)) sortOrder = order.indexOf(leaf)
               } catch {}
 
-              pages.push({ slug, title, parentSlug, sortOrder: sortOrder >= 0 ? sortOrder : 0, hasChildren: false })
+              pageList.push({ slug, title, parentSlug: pSlug, sortOrder: sortOrder >= 0 ? sortOrder : 0, hasChildren: false })
             }
 
-            for (const p of pages) {
+            for (const p of pageList) {
               if (slugsWithChildren.has(p.slug)) p.hasChildren = true
             }
 
-            pages.sort((a, b) => {
+            pageList.sort((a: any, b: any) => {
               if (!a.parentSlug && b.parentSlug) return -1
               if (a.parentSlug && !b.parentSlug) return 1
               if (a.parentSlug === b.parentSlug) return a.sortOrder - b.sortOrder
@@ -243,20 +246,18 @@ function editorPlugin(): any {
               return 0
             })
 
-            sendJSON(res, { pages })
-          } catch (err) {
-            sendJSON(res, { pages: [] })
-          }
+            sendJSON(res, { pages: pageList })
+          } catch { sendJSON(res, { pages: [] }) }
         } else {
-          // /api/pages/:category/:slug → 返回单篇内容
+          // GET /api/pages/:category/:slug → 单篇内容
           try {
             const slug = parts.slice(1).join('/')
             const filePath = resolve(contentDir, slug + '.html')
             const raw = await readFile(filePath, 'utf-8')
             const title = extractTitle(raw)
-            const slugParts = slug.split('/')
-            const parentSlug = slugParts.length > 1 ? slugParts.slice(0, -1).join('/') : null
-            sendJSON(res, { slug, title, content: raw, parentSlug, updatedAt: Date.now() })
+            const slugParts2 = slug.split('/')
+            const pSlug2 = slugParts2.length > 1 ? slugParts2.slice(0, -1).join('/') : null
+            sendJSON(res, { slug, title, content: raw, parentSlug: pSlug2, updatedAt: Date.now() })
           } catch {
             sendJSON(res, { error: 'not found' }, 404)
           }
