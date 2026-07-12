@@ -18,15 +18,18 @@ async function authMiddleware(c: any, next: any) {
 
 // GET /api/pages/:category — 获取分类下页面列表
 pages.get('/pages/:category', async (c) => {
-  const db = new DB(c.env);
-  const category = c.req.param('category');
-  const rows = await db.getPagesByCategory(category);
+  try {
+    const db = new DB(c.env);
+    const category = c.req.param('category');
+    const rows = await db.getPagesByCategory(category);
 
   const slugsWithChildren = new Set<string>();
   for (const r of rows) {
     if (r.parent_slug) slugsWithChildren.add(r.parent_slug);
   }
-  const result = rows.map(r => ({
+  // 过滤掉 .order.json
+  const filtered = rows.filter(r => !r.slug.endsWith('.order.json'));
+  const result = filtered.map(r => ({
     slug: r.slug,
     title: r.title,
     parentSlug: r.parent_slug,
@@ -34,6 +37,9 @@ pages.get('/pages/:category', async (c) => {
     hasChildren: slugsWithChildren.has(r.slug),
   }));
   return c.json({ pages: result });
+  } catch (err: any) {
+    return c.json({ error: err.message || 'unknown', stack: err.stack }, 500);
+  }
 });
 
 // GET /api/pages/:category/:slug{.*} — 获取单篇内容
@@ -158,6 +164,18 @@ pages.post('/move-page', authMiddleware, async (c) => {
     );
   }
 
+  return c.json({ success: true });
+});
+
+// POST /api/reorder — 更新排序
+pages.post('/reorder', authMiddleware, async (c) => {
+  const db = new DB(c.env);
+  const body = (c as any).get('body') as { category: string; parentSlug?: string; slugs: string[] };
+  for (let i = 0; i < body.slugs.length; i++) {
+    const slug = body.parentSlug ? `${body.parentSlug}/${body.slugs[i]}` : body.slugs[i];
+    await db.query('UPDATE notes SET sort_order = ? WHERE category = ? AND slug = ?',
+      [i, body.category, slug]);
+  }
   return c.json({ success: true });
 });
 

@@ -5,16 +5,16 @@
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 12px;
-  padding: 20px;
+  gap: 6px;
+  padding: 10px;
   cursor: pointer;
   transition: none;
-  min-width: 200px;
+  min-width: 110px;
 }
 
 .imageWrapper {
-  width: 80px;
-  height: 80px;
+  width: 40px;
+  height: 40px;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -23,20 +23,20 @@
 }
 
 .image {
-  width: 80px;
-  height: 80px;
+  width: 40px;
+  height: 40px;
   image-rendering: pixelated;
   image-rendering: crisp-edges;
 }
 
 .placeholderEmoji {
-  font-size: 48px;
+  font-size: 28px;
   image-rendering: pixelated;
 }
 
 .title {
   font-family: var(--font-pixel);
-  font-size: 16px;
+  font-size: 11px;
   color: var(--color-highlight);
   text-align: center;
   margin: 0;
@@ -44,8 +44,8 @@
 
 .description {
   font-family: var(--font-pixel);
-  font-size: 11px;
+  font-size: 9px;
   color: var(--color-text-dim);
   text-align: center;
-  line-height: 1.6;
+  line-height: 1.4;
 }

@@ -13,6 +13,9 @@
     "db:init": "cd workers && npx wrangler d1 execute pixel-notes-db --remote --file=../migration.sql"
   },
   "dependencies": {
+    "@tidbcloud/serverless": "^0.3.0",
+    "bcryptjs": "^3.0.3",
+    "hono": "^4.12.29",
     "react": "^19.2.7",
     "react-dom": "^19.2.7",
     "react-router-dom": "^7.18.1"

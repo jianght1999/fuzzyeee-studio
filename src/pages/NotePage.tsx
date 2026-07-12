@@ -100,12 +100,11 @@ export default function NotePage() {
     const dirKey = parentSlug ? `${category}/${parentSlug}` : (category ?? '');
     setOrderOverrides(prev => ({ ...prev, [dirKey]: slugs }));
     if (!token) return;
-    const orderPath = `src/content/${dirKey}/.order.json`;
     try {
-      await fetch('/api/save', {
+      await fetch('/api/reorder', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ token, path: orderPath, content: JSON.stringify(slugs, null, 2) }),
+        body: JSON.stringify({ token, category, parentSlug: parentSlug ?? undefined, slugs }),
       });
     } catch { /* ignore */ }
   };

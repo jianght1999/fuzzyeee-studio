@@ -1,10 +1,10 @@
 name = "pixel-notes-api"
 main = "src/index.ts"
 compatibility_date = "2025-07-01"
+compatibility_flags = ["nodejs_compat"]
 
 [vars]
-TIDB_ENDPOINT = ""
-TIDB_API_KEY = ""
+DB_URL = "mysql://2YwMFjXYGaM2NF3.root:ibOPdTDPrq51GxIP@gateway01.ap-southeast-1.prod.aws.tidbcloud.com:4000/test"
 
 [observability]
 enabled = true

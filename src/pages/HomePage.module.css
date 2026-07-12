@@ -16,7 +16,7 @@
 
 .title {
   font-family: var(--font-pixel);
-  font-size: 36px;
+  font-size: 22px;
   color: var(--color-highlight);
   text-shadow: 4px 4px 0 #000;
   margin-bottom: 12px;
@@ -40,7 +40,7 @@
 
 .noticeText {
   font-family: var(--font-pixel);
-  font-size: 13px;
+  font-size: 11px;
   color: var(--color-text);
   line-height: 1.8;
 }

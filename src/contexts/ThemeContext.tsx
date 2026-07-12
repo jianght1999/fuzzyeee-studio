@@ -13,7 +13,7 @@ export function useTheme() { return useContext(ThemeContext); }
 
 export function ThemeProvider({ children }: { children: ReactNode }) {
   const [theme, setTheme] = useState<Theme>(() => {
-    return (localStorage.getItem('pixel_theme') as Theme) || 'dark';
+    return (localStorage.getItem('pixel_theme') as Theme) || 'light';
   });
 
   useEffect(() => {

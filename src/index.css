@@ -1,8 +1,6 @@
 /* ===== 像素风全局设计系统 ===== */
 
 /* --- 字体引入 --- */
-@import url('https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap');
-
 /* 缝合怪像素字体 - 10px 等宽，本地托管 */
 @font-face {
   font-family: 'Fusion Pixel';
@@ -30,7 +28,7 @@
   --color-link: #b8a88a;
 
   /* 字体 */
-  --font-pixel: 'Fusion Pixel', 'Press Start 2P', monospace;
+  --font-pixel: 'Fusion Pixel', monospace;
   --font-code: 'Fira Code', 'Courier New', monospace;
 
   /* 间距 */
@@ -73,16 +71,17 @@
 }
 
 html {
-  font-size: 20px;
+  font-size: 16px;
   -webkit-font-smoothing: none;
   -moz-osx-font-smoothing: unset;
 }
 
 body {
   font-family: var(--font-pixel);
+  font-size: 11px;
   background-color: var(--color-bg);
   color: var(--color-text);
-  line-height: 1.8;
+  line-height: 1.6;
   min-height: 100vh;
   image-rendering: pixelated;
   image-rendering: crisp-edges;
@@ -118,8 +117,8 @@ body {
 /* --- 像素按钮 --- */
 .pixel-button {
   font-family: var(--font-pixel);
-  font-size: 14px;
-  padding: 8px 16px;
+  font-size: 11px;
+  padding: 4px 10px;
   border: 3px solid #000;
   background: var(--color-card-bg);
   color: var(--color-text);

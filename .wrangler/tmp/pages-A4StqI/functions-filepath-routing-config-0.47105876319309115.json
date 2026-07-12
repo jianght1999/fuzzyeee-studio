@@ -1,0 +1,117 @@
+{
+  "routes": [
+    {
+      "routePath": "/api/pages/:category/:slug*",
+      "mountPath": "/api/pages/:category",
+      "method": "GET",
+      "module": [
+        "api/pages/[category]/[[slug]].ts:onRequestGet"
+      ]
+    },
+    {
+      "routePath": "/api/pages/:category",
+      "mountPath": "/api/pages",
+      "method": "GET",
+      "module": [
+        "api/pages/[category].ts:onRequestGet"
+      ]
+    },
+    {
+      "routePath": "/api/img/:key*",
+      "mountPath": "/api/img",
+      "method": "GET",
+      "module": [
+        "api/img/[[key]].ts:onRequestGet"
+      ]
+    },
+    {
+      "routePath": "/api/create-page",
+      "mountPath": "/api",
+      "method": "POST",
+      "module": [
+        "api/create-page.ts:onRequestPost"
+      ]
+    },
+    {
+      "routePath": "/api/delete-page",
+      "mountPath": "/api",
+      "method": "POST",
+      "module": [
+        "api/delete-page.ts:onRequestPost"
+      ]
+    },
+    {
+      "routePath": "/api/login",
+      "mountPath": "/api",
+      "method": "POST",
+      "module": [
+        "api/login.ts:onRequestPost"
+      ]
+    },
+    {
+      "routePath": "/api/logout",
+      "mountPath": "/api",
+      "method": "POST",
+      "module": [
+        "api/logout.ts:onRequestPost"
+      ]
+    },
+    {
+      "routePath": "/api/move-page",
+      "mountPath": "/api",
+      "method": "POST",
+      "module": [
+        "api/move-page.ts:onRequestPost"
+      ]
+    },
+    {
+      "routePath": "/api/music-list",
+      "mountPath": "/api",
+      "method": "GET",
+      "module": [
+        "api/music-list.ts:onRequestGet"
+      ]
+    },
+    {
+      "routePath": "/api/recent",
+      "mountPath": "/api",
+      "method": "GET",
+      "module": [
+        "api/recent.ts:onRequestGet"
+      ]
+    },
+    {
+      "routePath": "/api/recent",
+      "mountPath": "/api",
+      "method": "POST",
+      "module": [
+        "api/recent.ts:onRequestPost"
+      ]
+    },
+    {
+      "routePath": "/api/rename-page",
+      "mountPath": "/api",
+      "method": "POST",
+      "module": [
+        "api/rename-page.ts:onRequestPost"
+      ]
+    },
+    {
+      "routePath": "/api/save",
+      "mountPath": "/api",
+      "method": "POST",
+      "module": [
+        "api/save.ts:onRequestPost"
+      ]
+    },
+    {
+      "routePath": "/api/upload-image",
+      "mountPath": "/api",
+      "method": "POST",
+      "module": [
+        "api/upload-image.ts:onRequestPost"
+      ]
+    }
+  ],
+  "baseURL": "/"
+}

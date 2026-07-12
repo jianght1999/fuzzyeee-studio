@@ -1,6 +1,5 @@
 export interface Env {
-  TIDB_ENDPOINT: string;
-  TIDB_API_KEY: string;
+  DB_URL: string;
 }
 
 export interface NoteRow {

@@ -15,16 +15,17 @@ export default function ImageUploadModal({ onInsert, onClose }: ImageUploadModal
   const nightRef = useRef<HTMLInputElement>(null);
   const singleRef = useRef<HTMLInputElement>(null);
 
-  // 上传图片到 Worker → KV，返回 URL
+  // 上传图片到 Worker，失败则回退到 base64
   const upload = async (file: File): Promise<string> => {
     const formData = new FormData();
     formData.append('file', file);
     formData.append('token', sessionStorage.getItem('pixel_notes_token') || '');
-
-    const res = await fetch('/api/upload-image', { method: 'POST', body: formData });
-    const data = await res.json();
-    if (data.success) return data.url;
-    // 如果 Worker 不可用（dev 模式），回退到 base64
+    try {
+      const res = await fetch('/api/upload-image', { method: 'POST', body: formData });
+      const data = await res.json();
+      if (data.success && data.url) return data.url;
+    } catch {}
+    // 回退到 base64
     return new Promise(resolve => {
       const reader = new FileReader();
       reader.onload = () => resolve(reader.result as string);
@@ -59,13 +60,13 @@ export default function ImageUploadModal({ onInsert, onClose }: ImageUploadModal
             <div className={styles.row}>
               <span className={styles.label}>☀ day</span>
               <button className="pixel-button" onClick={() => dayRef.current?.click()}>choose</button>
-              <input ref={dayRef} type="file" accept="image/*" hidden onChange={handleDay} />
+              <input ref={dayRef} type="file" accept="image/*" style={{ position: 'absolute', left: '-9999px' }} onChange={handleDay} />
               {daySrc && <span className={styles.ok}>✓</span>}
             </div>
             <div className={styles.row}>
               <span className={styles.label}>☾ night</span>
               <button className="pixel-button" onClick={() => nightRef.current?.click()}>choose</button>
-              <input ref={nightRef} type="file" accept="image/*" hidden onChange={handleNight} />
+              <input ref={nightRef} type="file" accept="image/*" style={{ position: 'absolute', left: '-9999px' }} onChange={handleNight} />
               {nightSrc && <span className={styles.ok}>✓</span>}
             </div>
           </>
@@ -73,7 +74,7 @@ export default function ImageUploadModal({ onInsert, onClose }: ImageUploadModal
           <div className={styles.row}>
             <span className={styles.label}>image</span>
             <button className="pixel-button" onClick={() => singleRef.current?.click()}>choose</button>
-            <input ref={singleRef} type="file" accept="image/*" hidden onChange={handleSingle} />
+            <input ref={singleRef} type="file" accept="image/*" style={{ position: 'absolute', left: '-9999px' }} onChange={handleSingle} />
             {daySrc && <span className={styles.ok}>✓</span>}
           </div>
         )}
