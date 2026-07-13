@@ -240,7 +240,7 @@ input, textarea, [contenteditable] {
   cursor: url('/cursors/text.cur'), text;
 }
 
-/* Theme-aware images */
+/* 双图模式：主题切换；单图模式（img-both）两边都显示 */
 [data-theme="light"] .img-dark { display: none !important; }
 [data-theme="dark"] .img-light { display: none !important; }
 ._v2 { color: inherit }
