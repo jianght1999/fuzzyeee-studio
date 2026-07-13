@@ -42,6 +42,7 @@
 /* Keep resizable wrappers looking clean in preview */
 [data-resizable] {
   overflow: hidden !important;
+  min-height: 24px;
 }
 [data-resizable] img {
   display: block;
