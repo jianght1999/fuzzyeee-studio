@@ -228,14 +228,17 @@ export function RichTextEditor({ content, filePath, onSave, onCancel, onHasChang
           onClose={() => setShowImageModal(false)}
           onInsert={(daySrc, nightSrc) => {
             if (!daySrc && !nightSrc) return;
-            const wrap = (cls: string, src: string) => src
-              ? `<div contenteditable="false" data-resizable class="${cls}" style="display:block;margin:16px auto;resize:both;overflow:hidden;max-width:100%;min-width:40px;min-height:20px;text-align:center;"><img src="${src}" style="display:block;width:100%;height:auto;pointer-events:none;"></div><br>`
-              : '';
-            // 双图模式：白天黑夜各一张；单图模式：同一张图两边都显示
             const same = daySrc && daySrc === nightSrc;
-            const html = same
-              ? wrap('img-both', daySrc)
-              : wrap('img-light', daySrc) + wrap('img-dark', nightSrc);
+            let html: string;
+            if (same) {
+              // 单图模式：一个容器，两边都显示
+              html = `<div contenteditable="false" data-resizable class="img-both" style="display:block;margin:16px auto;resize:both;overflow:hidden;max-width:100%;min-width:40px;min-height:20px;text-align:center;"><img src="${daySrc}" style="display:block;width:100%;height:auto;pointer-events:none;"></div><br>`;
+            } else {
+              // 双图模式：一个容器包两张图，主题切换只隐藏内部 div
+              const day = daySrc ? `<div class="img-light"><img src="${daySrc}" style="display:block;width:100%;height:auto;pointer-events:none;"></div>` : '';
+              const night = nightSrc ? `<div class="img-dark"><img src="${nightSrc}" style="display:block;width:100%;height:auto;pointer-events:none;"></div>` : '';
+              html = `<div contenteditable="false" data-resizable style="display:block;margin:16px auto;resize:both;overflow:hidden;max-width:100%;min-width:40px;min-height:20px;text-align:center;">${day}${night}</div><br>`;
+            }
             editorRef.current?.focus();
             document.execCommand('insertHTML', false, html);
           }}

@@ -43,7 +43,7 @@ export default function ImageUploadModal({ onInsert, onClose }: ImageUploadModal
     const f = e.target.files?.[0]; if (f) { setUploading(true); const src = await upload(f); setDaySrc(src); setNightSrc(src); setUploading(false); }
   };
 
-  const canInsert = !uploading && (mode === 'single' ? !!daySrc : (!!daySrc && !!nightSrc));
+  const canInsert = !uploading && (mode === 'single' ? !!daySrc : (!!daySrc || !!nightSrc));
 
   return (
     <div className={styles.overlay} onClick={e => { if (e.target === e.currentTarget) onClose(); }}>
