@@ -6,8 +6,8 @@ interface ReorderPopupProps {
   page: Page;
   allPages: Page[];
   rootPages: Page[];
-  onMove: (slug: string, newParentSlug: string | null) => Promise<void>;
-  onReorder: (parentSlug: string | null, slugs: string[]) => Promise<void>;
+  onMove: (slug: string, newParentSlug: string | null) => void;
+  onReorder: (parentSlug: string | null, slugs: string[]) => void;
   onClose: () => void;
 }
 
@@ -59,13 +59,13 @@ export default function ReorderPopup({
     return opts;
   }, [selectedParent, allPages, page]);
 
-  const handleConfirm = async () => {
+  const handleConfirm = () => {
     const newParentSlug = selectedParent === '__root__' ? null : selectedParent;
     const oldParentSlug = page.parentSlug ?? null;
     const parentChanged = newParentSlug !== oldParentSlug;
 
     if (parentChanged) {
-      await onMove(page.slug, newParentSlug);
+      onMove(page.slug, newParentSlug);
     } else {
       const siblings = allPages
         .filter(p => (p.parentSlug ?? null) === oldParentSlug)
@@ -82,9 +82,9 @@ export default function ReorderPopup({
         return parts[parts.length - 1];
       });
 
-      // keepalive 确保刷新后请求不丢失
-      await onReorder(oldParentSlug, leafSlugs);
+      onReorder(oldParentSlug, leafSlugs);
     }
+    // sendBeacon 保证请求不会被刷新取消
     window.location.reload();
   };
 

@@ -160,15 +160,12 @@ export default function NotePage() {
   };
 
   // --- 重排序 ---
-  const handleReorder = async (parentSlug: string | null, leafSlugs: string[]) => {
+  const handleReorder = (parentSlug: string | null, leafSlugs: string[]) => {
     if (!token) { alert('请先登录'); return; }
-    const res = await fetch(`/api/reorder`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ token, category, parentSlug: parentSlug ?? undefined, slugs: leafSlugs }),
-      keepalive: true,
-    });
-    if (!res.ok) { alert('排序保存失败，请重新登录'); }
+    // sendBeacon 在页面离开后仍会完成，不会被 reload 取消
+    navigator.sendBeacon('/api/reorder', JSON.stringify({
+      token, category, parentSlug: parentSlug ?? undefined, slugs: leafSlugs,
+    }));
   };
 
   if (!categoryInfo || !categoryInfo.isAvailable) {
