@@ -59,13 +59,13 @@ export default function ReorderPopup({
     return opts;
   }, [selectedParent, allPages, page]);
 
-  const handleConfirm = () => {
+  const handleConfirm = async () => {
     const newParentSlug = selectedParent === '__root__' ? null : selectedParent;
     const oldParentSlug = page.parentSlug ?? null;
     const parentChanged = newParentSlug !== oldParentSlug;
 
     if (parentChanged) {
-      onMove(page.slug, newParentSlug);
+      await onMove(page.slug, newParentSlug);
     } else {
       const siblings = allPages
         .filter(p => (p.parentSlug ?? null) === oldParentSlug)
@@ -82,9 +82,9 @@ export default function ReorderPopup({
         return parts[parts.length - 1];
       });
 
-      onReorder(oldParentSlug, leafSlugs);
+      // keepalive 确保刷新后请求不丢失
+      await onReorder(oldParentSlug, leafSlugs);
     }
-    // 直接刷新，不等 API
     window.location.reload();
   };
 

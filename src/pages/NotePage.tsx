@@ -166,6 +166,7 @@ export default function NotePage() {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ token, category, parentSlug: parentSlug ?? undefined, slugs: leafSlugs }),
+      keepalive: true,
     });
     if (!res.ok) { alert('排序保存失败，请重新登录'); }
   };
