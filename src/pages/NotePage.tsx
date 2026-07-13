@@ -160,12 +160,20 @@ export default function NotePage() {
   };
 
   // --- 重排序 ---
-  const handleReorder = (parentSlug: string | null, leafSlugs: string[]) => {
+  const handleReorder = async (parentSlug: string | null, leafSlugs: string[]) => {
     if (!token) { alert('请先登录'); return; }
-    // sendBeacon 在页面离开后仍会完成，不会被 reload 取消
-    navigator.sendBeacon('/api/reorder', JSON.stringify({
-      token, category, parentSlug: parentSlug ?? undefined, slugs: leafSlugs,
-    }));
+    // await + 超时兜底，确保请求完成再刷新
+    const ctrl = new AbortController();
+    const id = setTimeout(() => ctrl.abort(), 5000);
+    try {
+      await fetch('/api/reorder', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ token, category, parentSlug: parentSlug ?? undefined, slugs: leafSlugs }),
+        signal: ctrl.signal,
+      });
+    } catch { /* 超时或网络错误，刷新照常 */ }
+    clearTimeout(id);
   };
 
   if (!categoryInfo || !categoryInfo.isAvailable) {

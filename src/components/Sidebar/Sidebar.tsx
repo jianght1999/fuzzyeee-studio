@@ -11,8 +11,8 @@ interface SidebarProps {
   onAddPage?: (name: string, parentSlug?: string) => void;
   onDeletePage?: (slug: string) => void;
   onRenamePage?: (oldSlug: string, newName: string) => void;
-  onMove?: (slug: string, newParentSlug: string | null) => void;
-  onReorder?: (parentSlug: string | null, slugs: string[]) => void;
+  onMove?: (slug: string, newParentSlug: string | null) => Promise<void>;
+  onReorder?: (parentSlug: string | null, slugs: string[]) => Promise<void>;
   onExpandedChange?: (slugs: string[]) => void;
 }
 
