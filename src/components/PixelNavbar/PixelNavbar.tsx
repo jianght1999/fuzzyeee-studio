@@ -14,7 +14,7 @@ export default function PixelNavbar() {
   return (
     <nav className={styles.navbar}>
       <div className={styles.left}>
-        <Link to="/notes/reading" className="pixel-button">建站文档</Link>
+        <Link to="/notes/writing?page=建站文档" className="pixel-button">建站文档</Link>
       </div>
       <div className={styles.right}>
         <button className="pixel-button" onClick={toggle} title="toggle theme">

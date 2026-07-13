@@ -33,14 +33,6 @@ export const categories: Category[] = [
     emoji: '📚',
   },
   {
-    slug: 'reading',
-    title: '建站文档',
-    description: '',
-    image: '/images/writing.png',
-    isAvailable: true,
-    emoji: '📖',
-  },
-  {
     slug: 'coming-soon',
     title: 'coming soon',
     description: '',
