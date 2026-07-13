@@ -231,7 +231,11 @@ export function RichTextEditor({ content, filePath, onSave, onCancel, onHasChang
             const wrap = (cls: string, src: string) => src
               ? `<div contenteditable="false" data-resizable class="${cls}" style="display:block;margin:16px auto;resize:both;overflow:hidden;max-width:100%;min-width:40px;min-height:20px;text-align:center;"><img src="${src}" style="display:block;width:100%;height:auto;pointer-events:none;"></div><br>`
               : '';
-            const html = wrap('img-light', daySrc) + wrap('img-dark', nightSrc);
+            // 双图模式：白天黑夜各一张；单图模式：同一张图两边都显示
+            const same = daySrc && daySrc === nightSrc;
+            const html = same
+              ? wrap('img-both', daySrc)
+              : wrap('img-light', daySrc) + wrap('img-dark', nightSrc);
             editorRef.current?.focus();
             document.execCommand('insertHTML', false, html);
           }}
