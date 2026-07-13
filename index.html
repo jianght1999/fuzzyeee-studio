@@ -3,10 +3,20 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <link rel="icon" type="image/png" href="/images/crafts.png" />
+    <link rel="icon" type="image/png" href="/images/crafts.png?v=2" />
     <title> FUZZYEEE | STUDIO</title>
   </head>
   <body>
+    <style>
+      #loading-overlay {
+        position: fixed; inset: 0; z-index: 9999;
+        display: flex; align-items: center; justify-content: center;
+        background: #f5f0e8;
+        font-family: monospace; font-size: 11px; color: #888;
+        text-align: center; padding: 40px;
+      }
+    </style>
+    <div id="loading-overlay">加载中<br>第一次加载可能时间比较久<br>但也并非久</div>
     <div id="root"></div>
     <script type="module" src="/src/main.tsx"></script>
   </body>

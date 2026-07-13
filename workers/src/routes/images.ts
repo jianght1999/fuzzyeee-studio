@@ -1,6 +1,6 @@
 import { Hono } from 'hono';
 import { DB } from '../db';
-import { validateToken } from '../auth';
+import { validateToken, ensureTokensLoaded } from '../auth';
 import type { Env } from '../types';
 
 const images = new Hono<{ Bindings: Env }>();
@@ -8,6 +8,8 @@ const images = new Hono<{ Bindings: Env }>();
 // POST /api/upload-image — 上传图片（base64 存 TiDB）
 images.post('/upload-image', async (c) => {
   const formData = await c.req.formData();
+  const db = new DB(c.env);
+  await ensureTokensLoaded(db);
   const token = formData.get('token') as string;
   if (!validateToken(token || '')) {
     return c.json({ error: 'not authenticated' }, 403);
@@ -21,7 +23,6 @@ images.post('/upload-image', async (c) => {
   const ext = file.name.split('.').pop() || 'png';
   const dataUrl = `data:image/${ext};base64,${base64}`;
 
-  const db = new DB(c.env);
   const key = `img/${Date.now()}-${Math.random().toString(36).slice(2, 8)}.${ext}`;
   await db.setSetting(key, dataUrl);
 

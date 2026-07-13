@@ -1,6 +1,6 @@
 import { Hono } from 'hono';
 import { DB } from '../db';
-import { validateToken } from '../auth';
+import { validateToken, ensureTokensLoaded } from '../auth';
 import { extractTitle, getParentSlug, parsePath } from '../helpers';
 import type { Env } from '../types';
 
@@ -8,6 +8,8 @@ const pages = new Hono<{ Bindings: Env }>();
 
 // Auth 中间件
 async function authMiddleware(c: any, next: any) {
+  const db = new DB(c.env);
+  await ensureTokensLoaded(db); // 冷启动后从 DB 恢复 token
   const body = await c.req.json().catch(() => ({}));
   if (!validateToken(body.token || '')) {
     return c.json({ success: false, error: 'not authenticated' }, 403);
@@ -69,13 +71,17 @@ pages.post('/save', authMiddleware, async (c) => {
   const title = extractTitle(body.content);
   const now = Date.now();
 
+  // 保留已有 sort_order（改名等操作会先改 slug 再调 save，不能重置为 0）
+  const existing = await db.getPageBySlug(category, slug);
+  const sortOrder = existing?.sort_order ?? 0;
+
   await db.upsertNote({
     slug,
     category,
     title,
     content: body.content,
     parent_slug: getParentSlug(slug),
-    sort_order: 0,
+    sort_order: sortOrder,
     updated_at: now,
   });
 
@@ -93,14 +99,30 @@ pages.post('/create-page', authMiddleware, async (c) => {
   const htmlContent = body.content || `<h1>${slug.split('/').pop()}</h1>\n<p></p>`;
   const title = extractTitle(htmlContent);
   const now = Date.now();
+  const parentSlug = getParentSlug(slug);
+
+  // 将新页面的 sort_order 设为同组末尾，避免打乱已有顺序
+  let sortOrder = 0;
+  try {
+    const countRows = parentSlug
+      ? await db.query<{ cnt: number }>(
+          'SELECT count(*) as cnt FROM notes WHERE category = ? AND parent_slug = ?',
+          [category, parentSlug],
+        )
+      : await db.query<{ cnt: number }>(
+          'SELECT count(*) as cnt FROM notes WHERE category = ? AND parent_slug IS NULL',
+          [category],
+        );
+    sortOrder = Number(countRows[0]?.cnt) || 0;
+  } catch { /* fallback to 0 */ }
 
   await db.upsertNote({
     slug,
     category,
     title,
     content: htmlContent,
-    parent_slug: getParentSlug(slug),
-    sort_order: 0,
+    parent_slug: parentSlug,
+    sort_order: sortOrder,
     updated_at: now,
   });
 

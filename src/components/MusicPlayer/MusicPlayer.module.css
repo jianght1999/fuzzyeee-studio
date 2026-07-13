@@ -1,9 +1,9 @@
 .player {
   position: fixed;
   bottom: 24px;
-  right: 24px;
+  right: 8px;
   z-index: 99;
-  cursor: pointer;
+  cursor: url('/cursors/pointer.cur'), pointer;
   image-rendering: pixelated;
   transition: transform 0.1s step-end;
 }
@@ -17,8 +17,8 @@
 }
 
 .cat {
-  width: 192px;
-  height: 192px;
+  width: 128px;
+  height: 128px;
   image-rendering: pixelated;
   display: block;
 }

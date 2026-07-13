@@ -9,7 +9,7 @@
 
 .renderer h1 {
   font-family: var(--view-font, var(--font-pixel));
-  font-size: calc(var(--view-size, 14px) * 1.5);
+  font-size: 2em;
   color: var(--color-highlight);
   margin: 28px 0 14px;
   padding-bottom: 8px;
@@ -18,14 +18,14 @@
 
 .renderer h2 {
   font-family: var(--view-font, var(--font-pixel));
-  font-size: calc(var(--view-size, 14px) * 1.25);
+  font-size: 1.5em;
   color: var(--color-highlight);
   margin: 24px 0 10px;
 }
 
 .renderer h3 {
   font-family: var(--view-font, var(--font-pixel));
-  font-size: calc(var(--view-size, 14px) * 1.125);
+  font-size: 1.17em;
   color: var(--color-highlight-alt);
   margin: 20px 0 8px;
 }
@@ -36,6 +36,7 @@
   image-rendering: pixelated;
   display: block;
   margin: 12px auto;
+  cursor: url('/cursors/default.cur'), default;
 }
 
 /* Keep resizable wrappers looking clean in preview */
@@ -55,8 +56,8 @@
 /* Make <font size=N> match the editor's exact pixel sizes */
 .renderer font[size="1"] { font-size: 10px; }
 .renderer font[size="2"] { font-size: 10px; }
-.renderer font[size="3"] { font-size: 14px; }
-.renderer font[size="4"] { font-size: 14px; }
-.renderer font[size="5"] { font-size: 17px; }
-.renderer font[size="6"] { font-size: 24px; }
-.renderer font[size="7"] { font-size: 32px; }
+.renderer font[size="3"] { font-size: 16px; }
+.renderer font[size="4"] { font-size: 16px; }
+.renderer font[size="5"] { font-size: 20px; }
+.renderer font[size="6"] { font-size: 30px; }
+.renderer font[size="7"] { font-size: 40px; }

@@ -17,11 +17,11 @@ export default function NotePage() {
   const [activeSlug, setActiveSlug] = useState<string>(() => searchParams.get('page') || '');
   const [editing, setEditing] = useState(false);
   const [editedContent, setEditedContent] = useState<Record<string, string>>({});
-  const [titleOverrides, setTitleOverrides] = useState<Record<string, string>>({});
-  const [orderOverrides, setOrderOverrides] = useState<Record<string, string[]>>({});
+  const [titleOverrides] = useState<Record<string, string>>({});
   const [showLogin, setShowLogin] = useState(false);
   const expandedRef = useRef<string[]>([]);
   const editorDirtyRef = useRef(false);
+  const editorSaveRef = useRef<(() => void) | null>(null);
 
   const { isLoggedIn, logout, createPage, deletePage, saveMarkdown, token } = useAuth();
   const { theme, toggle: toggleTheme } = useTheme();
@@ -30,29 +30,19 @@ export default function NotePage() {
   const { pages, loading } = usePages(category || '');
 
   const sortedPages = useMemo(() => {
-    // Apply title overrides
     const mapped = pages.map(p => ({
       ...p,
       title: titleOverrides[p.slug] || p.title,
     }));
     return [...mapped].sort((a, b) => {
-      // First: root pages before children
+      // 根页面排在子页面前面
       if (!a.parentSlug && b.parentSlug) return -1;
       if (a.parentSlug && !b.parentSlug) return 1;
-      // Same parent group
-      if (a.parentSlug === b.parentSlug) {
-        const dirKey = a.parentSlug ? `${category}/${a.parentSlug}` : category ?? '';
-        const order = orderOverrides[dirKey];
-        if (order) {
-          const an = a.slug.replace(/^.*\//, ''), bn = b.slug.replace(/^.*\//, '');
-          const ai = order.indexOf(an), bi = order.indexOf(bn);
-          if (ai !== -1 && bi !== -1) return ai - bi;
-        }
-      }
-      // Different parent groups: use hook's original order (stable sort)
+      // 同组内按 API 返回的 sortOrder 排序
+      if (a.parentSlug === b.parentSlug) return a.sortOrder - b.sortOrder;
       return 0;
     });
-  }, [pages, orderOverrides, category, titleOverrides]);
+  }, [pages, titleOverrides]);
 
   useEffect(() => {
     if (sortedPages.length > 0 && !activeSlug) {
@@ -78,36 +68,6 @@ export default function NotePage() {
   const filePath = activePage
     ? `src/content/${category}/${activePage.slug}.html`
     : '';
-
-  const handleMovePage = async (draggedSlug: string, fromParent: string | null, toParent: string | null) => {
-    if (!token || fromParent === toParent) return;
-    const oldDir = fromParent ? `${category}/${fromParent}` : category;
-    const newDir = toParent ? `${category}/${toParent}` : category;
-    const slugName = draggedSlug.replace(/^.*\//, '');
-    const oldPath = `src/content/${oldDir}/${slugName}.html`;
-    const newPath = `src/content/${newDir}/${slugName}.html`;
-    try {
-      await fetch('/api/move-page', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ token, oldPath, newPath }),
-      });
-      window.location.reload();
-    } catch {}
-  };
-
-  const handleReorder = async (slugs: string[], parentSlug: string | null) => {
-    const dirKey = parentSlug ? `${category}/${parentSlug}` : (category ?? '');
-    setOrderOverrides(prev => ({ ...prev, [dirKey]: slugs }));
-    if (!token) return;
-    try {
-      await fetch('/api/reorder', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ token, category, parentSlug: parentSlug ?? undefined, slugs }),
-      });
-    } catch { /* ignore */ }
-  };
 
   const handleSidebarNavigate = (slug: string) => {
     if (editorDirtyRef.current && slug !== activeSlug) {
@@ -144,7 +104,15 @@ export default function NotePage() {
   const handleRenamePage = async (oldSlug: string, newName: string) => {
     const page = sortedPages.find(p => p.slug === oldSlug);
     if (!page || !token) return;
-    const oldContent = editedContent[oldSlug] ?? page.content;
+    // 列表 API 不返回 content，需要时再获取
+    let oldContent = editedContent[oldSlug];
+    if (!oldContent) {
+      try {
+        const res = await fetch(`/api/pages/${category}/${encodeURIComponent(oldSlug)}`);
+        const data = await res.json();
+        oldContent = data.content || '';
+      } catch { oldContent = ''; }
+    }
     let newContent = oldContent.replace(/<h1[^>]*>.*?<\/h1>/i, `<h1>${newName}</h1>`);
     if (!/<h1/i.test(newContent)) newContent = `<h1>${newName}</h1>\n${newContent}`;
     // Rename file + subdirectory on disk
@@ -154,7 +122,7 @@ export default function NotePage() {
       : newName;
     const newPath = `src/content/${category}/${newSlug}.html`;
     try {
-      const res = await fetch('/api/rename-page', {
+      const res = await fetch(`/api/rename-page`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ token, oldPath, newPath }),
@@ -162,12 +130,44 @@ export default function NotePage() {
       const data = await res.json();
       if (data.success) {
         await saveMarkdown(newPath, newContent);
-        setEditedContent(prev => ({ ...prev, [newSlug]: newContent }));
-        setTitleOverrides(prev => ({ ...prev, [newSlug]: newName }));
-        // Save exact expansion state for sidebar to restore
+        // 保存展开状态后刷新，确保 slug 变化后数据一致
         sessionStorage.setItem('pixel_keep_expanded', expandedRef.current.join(','));
+        window.location.reload();
       }
     } catch { /* ignore */ }
+  };
+
+  // --- 移动页面 ---
+  const handleMovePage = async (slug: string, newParentSlug: string | null) => {
+    if (!token) { alert('请先登录'); return; }
+    const leaf = slug.split('/').pop()!;
+    const oldPath = `src/content/${category}/${slug}.html`;
+    const newSlug = newParentSlug ? `${newParentSlug}/${leaf}` : leaf;
+    const newPath = `src/content/${category}/${newSlug}.html`;
+    try {
+      const res = await fetch(`/api/move-page`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ token, oldPath, newPath }),
+      });
+      if (res.ok) {
+        window.location.reload();
+      } else {
+        const data = await res.json().catch(() => ({}));
+        alert(data.error || '移动失败，请重新登录');
+      }
+    } catch { alert('移动失败'); }
+  };
+
+  // --- 重排序 ---
+  const handleReorder = async (parentSlug: string | null, leafSlugs: string[]) => {
+    if (!token) { alert('请先登录'); return; }
+    const res = await fetch(`/api/reorder`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ token, category, parentSlug: parentSlug ?? undefined, slugs: leafSlugs }),
+    });
+    if (!res.ok) { alert('排序保存失败，请重新登录'); }
   };
 
   if (!categoryInfo || !categoryInfo.isAvailable) {
@@ -211,7 +211,14 @@ export default function NotePage() {
           <RecentDropdown />
           {isLoggedIn ? (
             <>
-              <button className="pixel-button" onClick={logout}>logout</button>
+              <button className="pixel-button" onClick={() => {
+                if (editorDirtyRef.current) {
+                  if (window.confirm('有未保存的修改，是否保存？')) {
+                    editorSaveRef.current?.();
+                  }
+                }
+                logout();
+              }}>logout</button>
               {editing ? (
                 <button className="pixel-button" onClick={() => setEditing(false)}>preview</button>
               ) : (
@@ -233,19 +240,20 @@ export default function NotePage() {
           onAddPage={handleAddPage}
           onDeletePage={handleDeletePage}
           onRenamePage={handleRenamePage}
-          onReorder={handleReorder}
           onMove={handleMovePage}
+          onReorder={handleReorder}
           onExpandedChange={(slugs) => { expandedRef.current = slugs; }}
         />
 
         <main className={styles.content}>
-          {loading ? (
+          {loading || (activeSlug && fetchedContent === null) ? (
             <p className={styles.emptyHint}>加载中...</p>
           ) : activePage ? (
             editing ? (
               <RichTextEditor
                 content={displayContent}
                 filePath={filePath}
+                triggerRef={editorSaveRef}
                 onSave={handleSave}
                 onCancel={() => { editorDirtyRef.current = false; setEditing(false); }}
                 onHasChanges={(dirty) => { editorDirtyRef.current = dirty; }}

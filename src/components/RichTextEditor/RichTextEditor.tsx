@@ -19,7 +19,7 @@ interface RichTextEditorProps {
   onHasChanges?: (dirty: boolean) => void;
 }
 
-export default function RichTextEditor({ content, filePath, onSave, onCancel, onHasChanges }: RichTextEditorProps) {
+export function RichTextEditor({ content, filePath, onSave, onCancel, onHasChanges, triggerRef }: RichTextEditorProps & { triggerRef?: React.MutableRefObject<(() => void) | null> }) {
   const editorRef = useRef<HTMLDivElement>(null);
   const sizeRef = useRef<HTMLSelectElement>(null);
   const [saving, setSaving] = useState(false);
@@ -121,6 +121,9 @@ export default function RichTextEditor({ content, filePath, onSave, onCancel, on
       alert('fetch error: ' + (err.message || String(err)));
     }
   };
+
+  // Expose handleSave to parent via ref
+  if (triggerRef) triggerRef.current = handleSave;
 
   // Backspace/Delete handling
   const handleKeyDown = (e: React.KeyboardEvent) => {
@@ -237,3 +240,5 @@ export default function RichTextEditor({ content, filePath, onSave, onCancel, on
     </div>
   );
 }
+
+export default RichTextEditor;

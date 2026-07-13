@@ -1,12 +1,11 @@
 .desktopSidebar {
   display: block;
-  width: 140px;
+  width: 200px;
   flex-shrink: 0;
   border-right: 4px solid #000;
   box-shadow: 4px 0 0 var(--color-border);
   background: var(--color-card-bg);
   overflow-y: auto;
-  overflow-x: hidden;
   padding-bottom: 40px;
   position: relative;
 }
@@ -33,15 +32,16 @@
 .pageRow {
   display: flex;
   align-items: center;
+  user-select: none;
 }
 
 .pageRowChild {
-  padding-left: 12px;
+  padding-left: 6px;
 }
 
 .children {
   border-left: 2px solid var(--color-border);
-  margin-left: 16px;
+  margin-left: 8px;
 }
 
 .dragOver {
@@ -81,6 +81,16 @@
   text-overflow: ellipsis;
   white-space: nowrap;
 }
+
+.dragHandle {
+  cursor: grab;
+  color: var(--color-text-dim);
+  font-size: 14px;
+  padding: 0 4px;
+  user-select: none;
+  flex-shrink: 0;
+}
+.dragHandle:active { cursor: grabbing; }
 
 .actions {
   display: flex;

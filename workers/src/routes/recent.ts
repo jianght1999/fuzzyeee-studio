@@ -1,6 +1,6 @@
 import { Hono } from 'hono';
 import { DB } from '../db';
-import { validateToken } from '../auth';
+import { validateToken, ensureTokensLoaded } from '../auth';
 import type { Env } from '../types';
 
 const recent = new Hono<{ Bindings: Env }>();
@@ -20,6 +20,7 @@ recent.get('/recent', async (c) => {
 // POST /api/recent-delete
 recent.post('/recent-delete', async (c) => {
   const db = new DB(c.env);
+  await ensureTokensLoaded(db);
   const { token, path } = await c.req.json<{ token: string; path: string }>();
   if (!validateToken(token)) {
     return c.json({ error: 'not authenticated' }, 403);

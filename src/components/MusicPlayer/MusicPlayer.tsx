@@ -15,7 +15,7 @@ async function fetchMusicList(): Promise<string[]> {
 
 export default function MusicPlayer() {
   const [playing, setPlaying] = useState(false);
-  const [musicList, setMusicList] = useState<string[]>([]);
+  const [musicList, setMusicList] = useState<string[]>(KNOWN_TRACKS);
   const audioRef = useRef<HTMLAudioElement | null>(null);
 
   useEffect(() => { fetchMusicList().then(setMusicList); }, []);
@@ -41,6 +41,8 @@ export default function MusicPlayer() {
         src={playing ? import.meta.env.BASE_URL + 'images/cat-on.png' : import.meta.env.BASE_URL + 'images/cat-off.png'}
         alt="music"
         className={styles.cat}
+        style={{ pointerEvents: 'auto' }}
+        draggable={false}
       />
     </div>
   );

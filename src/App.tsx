@@ -1,4 +1,4 @@
-import { Component, type ReactNode } from 'react'
+import { Component, type ReactNode, useEffect } from 'react'
 import { Routes, Route } from 'react-router-dom'
 import { AuthProvider } from './contexts/AuthContext'
 import { ThemeProvider } from './contexts/ThemeContext'
@@ -21,6 +21,19 @@ class ErrorCatcher extends Component<{ children: ReactNode }, { err: Error | nul
 }
 
 function App() {
+  useEffect(() => {
+    const done = () => {
+      document.getElementById('loading-overlay')?.remove();
+    };
+    // 等 React 绘制完成（双 rAF）+ 字体加载完
+    requestAnimationFrame(() => requestAnimationFrame(() => {
+      const fontsReady = document.fonts?.ready ?? Promise.resolve();
+      // 30 秒兜底，防止字体永远加载不了
+      const timeout = new Promise(r => setTimeout(r, 30000));
+      Promise.race([fontsReady, timeout]).then(done);
+    }));
+  }, []);
+
   return (
     <ErrorCatcher>
       <ThemeProvider>

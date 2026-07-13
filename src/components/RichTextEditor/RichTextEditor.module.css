@@ -75,7 +75,7 @@
   background: var(--color-bg);
   color: var(--color-text);
   font-family: var(--font-pixel);
-  font-size: 20px;
+  font-size: 14px;
   outline: none;
   overflow-y: auto;
   min-height: 500px;
@@ -90,6 +90,7 @@
   max-width: 100%;
   image-rendering: pixelated;
   display: block;
+  cursor: url('/cursors/default.cur'), default;
 }
 
 .editable [data-resizable] {

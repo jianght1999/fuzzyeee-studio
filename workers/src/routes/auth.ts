@@ -1,6 +1,6 @@
 import { Hono } from 'hono';
 import { DB } from '../db';
-import { generateToken, validateToken, invalidateToken, hashPassword, verifyPassword } from '../auth';
+import { generateToken, validateToken, invalidateToken, hashPassword, verifyPassword, saveTokensToDB } from '../auth';
 import type { Env } from '../types';
 
 const auth = new Hono<{ Bindings: Env }>();
@@ -16,11 +16,13 @@ auth.post('/login', async (c) => {
     const hash = hashPassword(password);
     await db.setSetting('password_hash', hash);
     const token = generateToken();
+    await saveTokensToDB(db);
     return c.json({ success: true, token });
   }
 
   if (verifyPassword(password, stored)) {
     const token = generateToken();
+    await saveTokensToDB(db);
     return c.json({ success: true, token });
   }
   return c.json({ success: false, error: 'wrong password' }, 401);
@@ -28,8 +30,10 @@ auth.post('/login', async (c) => {
 
 // POST /api/logout
 auth.post('/logout', async (c) => {
+  const db = new DB(c.env);
   const { token } = await c.req.json<{ token: string }>();
   invalidateToken(token);
+  await saveTokensToDB(db);
   return c.json({ success: true });
 });
 

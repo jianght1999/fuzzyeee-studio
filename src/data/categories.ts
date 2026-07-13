@@ -9,7 +9,7 @@ export interface Category {
 
 export const categories: Category[] = [
   {
-    slug: 'guitar',
+    slug: 'jazz',
     title: 'jazz',
     description: '',
     image: '/images/jazz.png',
@@ -17,7 +17,7 @@ export const categories: Category[] = [
     emoji: '🎷',
   },
   {
-    slug: 'synth',
+    slug: 'crafts',
     title: 'crafts',
     description: '',
     image: '/images/crafts.png',
@@ -25,7 +25,7 @@ export const categories: Category[] = [
     emoji: '🎛️',
   },
   {
-    slug: 'reading',
+    slug: 'writing',
     title: 'writing',
     description: '',
     image: '/images/writing.png',

@@ -87,7 +87,7 @@ export class DB {
 
   async getPageBySlug(category: string, slug: string): Promise<NoteRow | null> {
     const rows = await this.query<NoteRow>(
-      'SELECT slug, title, content, parent_slug, updated_at FROM notes WHERE category = ? AND slug = ?', [category, slug]);
+      'SELECT slug, title, content, parent_slug, sort_order, updated_at FROM notes WHERE category = ? AND slug = ?', [category, slug]);
     return rows[0] ?? null;
   }
 

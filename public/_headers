@@ -1,8 +1,12 @@
 # Cloudflare Pages headers — cache & security
 
-# Static assets with content hash — cache aggressively
+# All HTML / SPA routes — never cache
+/*
+  Cache-Control: no-cache, no-store, must-revalidate
+
+# Static assets with content hash — cache 7 days
 /assets/*
-  Cache-Control: public, max-age=31536000, immutable
+  Cache-Control: public, max-age=604800
 
 # Fonts — cache for 1 year
 /fonts/*
@@ -13,10 +17,6 @@
   Cache-Control: public, max-age=604800
 /cursors/*
   Cache-Control: public, max-age=604800
-
-# HTML — never cache (SPA entry point)
-/index.html
-  Cache-Control: no-cache, no-store, must-revalidate
 
 # Security headers for all pages
 /*
