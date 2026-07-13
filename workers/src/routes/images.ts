@@ -17,13 +17,17 @@ images.post('/upload-image', async (c) => {
   const file = formData.get('file') as File;
   if (!file) return c.json({ error: 'no file' }, 400);
 
-  // 将图片转为 base64 存储
-  const buffer = await file.arrayBuffer();
-  const base64 = btoa(String.fromCharCode(...new Uint8Array(buffer)));
+  // 将图片转为 base64 存储（分块处理，避免大图参数溢出）
+  const bytes = new Uint8Array(await file.arrayBuffer());
+  const chunks: string[] = [];
+  for (let i = 0; i < bytes.length; i += 8192) {
+    chunks.push(String.fromCharCode(...bytes.subarray(i, i + 8192)));
+  }
+  const base64 = btoa(chunks.join(''));
   const ext = file.name.split('.').pop() || 'png';
   const dataUrl = `data:image/${ext};base64,${base64}`;
 
-  const key = `img/${Date.now()}-${Math.random().toString(36).slice(2, 8)}.${ext}`;
+  const key = `${Date.now()}-${Math.random().toString(36).slice(2, 8)}.${ext}`;
   await db.setSetting(key, dataUrl);
 
   return c.json({ success: true, url: `/api/img/${key}` });
