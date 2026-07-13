@@ -27,10 +27,10 @@ images.post('/upload-image', async (c) => {
   const ext = file.name.split('.').pop() || 'png';
   const dataUrl = `data:image/${ext};base64,${base64}`;
 
-  const key = `${Date.now()}-${Math.random().toString(36).slice(2, 8)}.${ext}`;
+  const key = `img/${Date.now()}-${Math.random().toString(36).slice(2, 8)}.${ext}`;
   await db.setSetting(key, dataUrl);
 
-  return c.json({ success: true, url: `/api/img/${key}` });
+  return c.json({ success: true, url: `/api/${key}` });
 });
 
 // GET /api/img/* — 获取图片
