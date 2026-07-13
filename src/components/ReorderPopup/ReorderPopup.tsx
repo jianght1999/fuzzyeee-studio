@@ -84,8 +84,8 @@ export default function ReorderPopup({
 
       onReorder(oldParentSlug, leafSlugs);
     }
-    // sendBeacon 保证请求不会被刷新取消
-    window.location.reload();
+    // 等一小会儿让 sendBeacon 先启动，再刷新
+    setTimeout(() => window.location.reload(), 300);
   };
 
   return (
