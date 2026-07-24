@@ -49,6 +49,7 @@ export default function RecentDropdown() {
 
   const formatTime = (iso: string) => {
     const d = new Date(iso);
+    if (isNaN(d.getTime())) return '';
     const now = new Date();
     const diff = now.getTime() - d.getTime();
     if (diff < 60000) return 'just now';
