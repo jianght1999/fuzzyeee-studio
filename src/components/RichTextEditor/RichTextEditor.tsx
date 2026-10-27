@@ -195,12 +195,6 @@ export function RichTextEditor({ content, filePath, onSave, onCancel, onHasChang
         <button className="pixel-button" onClick={() => exec('underline')} title="underline"><u>U</u></button>
         <span className={styles.sep} />
         <button className="pixel-button" onClick={() => setShowImageModal(true)} title="insert image">🖼</button>
-        <button className="pixel-button" onClick={() => {
-          const sel = window.getSelection();
-          const el = sel?.anchorNode?.parentElement;
-          const wrapper = el?.closest?.('[data-resizable]') as HTMLElement || el?.closest?.('img') as HTMLElement;
-          if (wrapper) { wrapper.style.float = wrapper.style.float === 'left' ? 'none' : 'left'; wrapper.style.margin = wrapper.style.float === 'left' ? '0 16px 8px 0' : '0'; }
-        }} title="toggle float">◧</button>
       </div>
       <div className={styles.toolbar}>
         <select className={styles.select} onChange={(e) => { if (e.target.value) applyFont(e.target.value); e.target.value = ''; }}>
