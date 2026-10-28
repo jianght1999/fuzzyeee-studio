@@ -45,3 +45,17 @@
   line-height: 1.8;
 }
 
+.badges {
+  display: flex;
+  gap: 12px;
+  padding: 0 24px;
+  max-width: 1000px;
+  margin: 0 auto;
+  width: 100%;
+}
+
+.badges img {
+  width: 100px;
+  height: auto;
+}
+

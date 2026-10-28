@@ -19,6 +19,10 @@ export default function HomePage() {
           <h1 className={styles.title}>FUZZYEEE STUDIO</h1>
         </div>
         <CategoryGrid onNoticeToggle={handleNoticeToggle} />
+        <div className={styles.badges}>
+          <img src="/images/66index.gif" alt="66index" />
+          <img src="/images/66index.gif" alt="66index" />
+        </div>
       </main>
       <PixelFooter />
 
