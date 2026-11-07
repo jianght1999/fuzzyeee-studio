@@ -41,6 +41,7 @@ export default function RainEffect() {
   const rainMaterialRef = useRef<THREE.MeshBasicMaterial | null>(null);
   const splashMaterialRef = useRef<THREE.MeshBasicMaterial | null>(null);
   const audioRef = useRef<HTMLAudioElement | null>(null);
+  const fadeRef = useRef<number | null>(null);
   const { raining } = useRain();
   const { theme } = useTheme();
 
@@ -290,23 +291,51 @@ export default function RainEffect() {
     }
   }, [raining]);
 
-  // 雨声：开启播放、关闭停止；独立 audio 元素，与音乐播放器叠加不冲突
+  // 雨声：开启播放；关闭时淡出约 3 秒再停，独立 audio 元素，与音乐播放器叠加不冲突
   useEffect(() => {
-    if (!raining) {
-      audioRef.current?.pause();
+    if (raining) {
+      // 开启：取消淡出，恢复音量并播放
+      if (fadeRef.current !== null) {
+        cancelAnimationFrame(fadeRef.current);
+        fadeRef.current = null;
+      }
+      if (!audioRef.current) {
+        audioRef.current = new Audio(RAIN_SOUND);
+        audioRef.current.loop = true;
+      }
+      const audio = audioRef.current;
+      audio.volume = 0.6;
+      audio.play().catch(() => {});
       return;
     }
-    if (!audioRef.current) {
-      audioRef.current = new Audio(RAIN_SOUND);
-      audioRef.current.loop = true;
-      audioRef.current.volume = 0.6;
-    }
-    audioRef.current.play().catch(() => {});
+
+    // 关闭：淡出约 3 秒后停止
+    const audio = audioRef.current;
+    if (!audio) return;
+    const startVol = audio.volume;
+    const start = performance.now();
+    const DURATION = 3000;
+    const fade = () => {
+      const t = Math.min((performance.now() - start) / DURATION, 1);
+      audio.volume = startVol * (1 - t);
+      if (t < 1) {
+        fadeRef.current = requestAnimationFrame(fade);
+      } else {
+        audio.pause();
+        audio.volume = 0.6;
+        fadeRef.current = null;
+      }
+    };
+    fadeRef.current = requestAnimationFrame(fade);
   }, [raining]);
 
   // 卸载时停止雨声
   useEffect(() => {
     return () => {
+      if (fadeRef.current !== null) {
+        cancelAnimationFrame(fadeRef.current);
+        fadeRef.current = null;
+      }
       audioRef.current?.pause();
       audioRef.current = null;
     };
