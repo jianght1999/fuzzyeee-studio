@@ -21,3 +21,11 @@
   align-items: center;
   gap: 8px;
 }
+
+.right :global(.pixel-button) {
+  height: 32px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  line-height: 1;
+}

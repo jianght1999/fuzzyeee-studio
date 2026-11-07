@@ -11,6 +11,8 @@ const RAIN_LENGTH = 18;
 const SPLASH_SIZE = 3;
 // 飞溅粒子池大小
 const SPLASH_COUNT = 200;
+// 雨声音频路径（与 MusicPlayer 一样用 BASE_URL 前缀）
+const RAIN_SOUND = import.meta.env.BASE_URL + 'music/rain.mp3';
 
 interface Drop {
   x: number; // 雨丝底端 x
@@ -37,6 +39,7 @@ export default function RainEffect() {
   const containerRef = useRef<HTMLDivElement>(null);
   const rainMaterialRef = useRef<THREE.MeshBasicMaterial | null>(null);
   const splashMaterialRef = useRef<THREE.MeshBasicMaterial | null>(null);
+  const audioRef = useRef<HTMLAudioElement | null>(null);
   const { raining } = useRain();
   const { theme } = useTheme();
 
@@ -241,6 +244,28 @@ export default function RainEffect() {
     rainMaterialRef.current?.color.setHex(color);
     splashMaterialRef.current?.color.setHex(color);
   }, [theme]);
+
+  // 雨声：开启播放、关闭停止；独立 audio 元素，与音乐播放器叠加不冲突
+  useEffect(() => {
+    if (!raining) {
+      audioRef.current?.pause();
+      return;
+    }
+    if (!audioRef.current) {
+      audioRef.current = new Audio(RAIN_SOUND);
+      audioRef.current.loop = true;
+      audioRef.current.volume = 0.6;
+    }
+    audioRef.current.play().catch(() => {});
+  }, [raining]);
+
+  // 卸载时停止雨声
+  useEffect(() => {
+    return () => {
+      audioRef.current?.pause();
+      audioRef.current = null;
+    };
+  }, []);
 
   if (!raining) return null;
   return <div ref={containerRef} className={styles.rain} />;
