@@ -16,16 +16,18 @@ export default function HomePage() {
     <div className={styles.page} onClick={() => setNotice({ show: false })}>
       <PixelNavbar />
       <main className={styles.main}>
-        <div className={`${styles.noticeBoard} pixel-card`}>
-          <h2 className={styles.noticeTitle}>新游戏</h2>
-          <p className={styles.noticeLine}>主页多了两个拱来拱去的小东西</p>
-          <p className={styles.noticeLine}>页面变湿润了</p>
-          <p className={styles.noticeDate}>2026.11.7</p>
-        </div>
         <div className={styles.hero}>
           <h1 className={styles.title}>FUZZYEEE STUDIO</h1>
         </div>
-        <CategoryGrid onNoticeToggle={handleNoticeToggle} />
+        <div className={styles.gridWrapper}>
+          <CategoryGrid onNoticeToggle={handleNoticeToggle} />
+          <div className={styles.noticeBoard}>
+            <h2 className={styles.noticeTitle}>新游戏</h2>
+            <p className={styles.noticeLine}>主页多了两个拱来拱去的小东西</p>
+            <p className={styles.noticeLine}>页面变湿润了</p>
+            <p className={styles.noticeDate}>2026.11.7</p>
+          </div>
+        </div>
         <div className={styles.badges}>
           <img className="img-light" src="/images/66index.gif" alt="66index" />
           <img className="img-dark" src="/images/shushuindex.gif" alt="shushuindex" />
