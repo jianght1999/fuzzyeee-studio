@@ -1,5 +1,4 @@
 .page {
-  position: relative;
   min-height: 100vh;
   display: flex;
   flex-direction: column;
@@ -22,35 +21,6 @@
   text-shadow: 4px 4px 0 #000;
   margin-bottom: 12px;
   letter-spacing: 4px;
-}
-
-.noticeBoard {
-  position: absolute;
-  top: 64px;
-  left: 16px;
-  width: fit-content;
-  z-index: 10;
-}
-
-.noticeTitle {
-  font-family: var(--font-pixel);
-  font-size: 14px;
-  color: var(--color-highlight);
-  margin-bottom: 10px;
-}
-
-.noticeLine {
-  font-family: var(--font-pixel);
-  font-size: 11px;
-  color: var(--color-text);
-  line-height: 1.8;
-}
-
-.noticeDate {
-  font-family: var(--font-pixel);
-  font-size: 11px;
-  color: var(--color-text-dim);
-  margin-top: 8px;
 }
 
 .noticeBackdrop {

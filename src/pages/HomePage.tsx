@@ -33,12 +33,6 @@ export default function HomePage() {
       <Suspense fallback={null}>
         <RainEffect />
       </Suspense>
-      <div className={styles.noticeBoard}>
-        <h2 className={styles.noticeTitle}>新游戏</h2>
-        <p className={styles.noticeLine}>主页多了两个拱来拱去的小东西</p>
-        <p className={styles.noticeLine}>页面变湿润了</p>
-        <p className={styles.noticeDate}>2026.11.7</p>
-      </div>
 
       {notice.show && (
         <div className={styles.noticeBackdrop} onClick={(e) => { e.stopPropagation(); setNotice({ show: false }); }}>
