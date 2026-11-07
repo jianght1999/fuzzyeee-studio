@@ -22,7 +22,7 @@
   gap: 8px;
 }
 
-.right :global(.pixel-button) {
+.navbar :global(.pixel-button) {
   height: 32px;
   display: inline-flex;
   align-items: center;
