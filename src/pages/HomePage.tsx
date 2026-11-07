@@ -20,8 +20,10 @@ export default function HomePage() {
         </div>
         <CategoryGrid onNoticeToggle={handleNoticeToggle} />
         <div className={styles.badges}>
-          <img src="/images/66index.gif" alt="66index" />
-          <img src="/images/66index.gif" alt="66index" />
+          <img className="img-light" src="/images/66index.gif" alt="66index" />
+          <img className="img-dark" src="/images/shushuindex.gif" alt="shushuindex" />
+          <img className="img-light" src="/images/66index.gif" alt="66index" />
+          <img className="img-dark" src="/images/shushuindex.gif" alt="shushuindex" />
         </div>
       </main>
       <PixelFooter />
