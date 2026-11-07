@@ -23,6 +23,33 @@
   letter-spacing: 4px;
 }
 
+.noticeBoard {
+  width: fit-content;
+  margin: 0 0 24px 24px;
+  padding: 16px 20px;
+}
+
+.noticeTitle {
+  font-family: var(--font-pixel);
+  font-size: 14px;
+  color: var(--color-highlight);
+  margin-bottom: 10px;
+}
+
+.noticeLine {
+  font-family: var(--font-pixel);
+  font-size: 11px;
+  color: var(--color-text);
+  line-height: 1.8;
+}
+
+.noticeDate {
+  font-family: var(--font-pixel);
+  font-size: 11px;
+  color: var(--color-text-dim);
+  margin-top: 8px;
+}
+
 .noticeBackdrop {
   position: fixed;
   inset: 0;
