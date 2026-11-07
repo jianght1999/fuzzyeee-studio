@@ -1,9 +1,11 @@
-import { useState } from 'react';
+import { lazy, Suspense, useState } from 'react';
 import PixelNavbar from '../components/PixelNavbar/PixelNavbar';
 import CategoryGrid from '../components/CategoryGrid/CategoryGrid';
 import PixelFooter from '../components/PixelFooter/PixelFooter';
-import RainEffect from '../components/RainEffect/RainEffect';
 import styles from './HomePage.module.css';
+
+// three.js 体积大，懒加载拆成独立 chunk，避免拖慢首屏
+const RainEffect = lazy(() => import('../components/RainEffect/RainEffect'));
 
 export default function HomePage() {
   const [notice, setNotice] = useState<{ show: boolean; rect?: DOMRect }>({ show: false });
@@ -28,7 +30,9 @@ export default function HomePage() {
         </div>
       </main>
       <PixelFooter />
-      <RainEffect />
+      <Suspense fallback={null}>
+        <RainEffect />
+      </Suspense>
       <div className={styles.noticeBoard}>
         <h2 className={styles.noticeTitle}>新游戏</h2>
         <p className={styles.noticeLine}>主页多了两个拱来拱去的小东西</p>
