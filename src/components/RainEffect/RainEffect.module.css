@@ -1,0 +1,10 @@
+.rain {
+  position: fixed;
+  inset: 0;
+  z-index: 50;
+  pointer-events: none;
+}
+
+.rain canvas {
+  display: block;
+}

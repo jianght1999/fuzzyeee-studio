@@ -2,6 +2,7 @@ import { useState } from 'react';
 import PixelNavbar from '../components/PixelNavbar/PixelNavbar';
 import CategoryGrid from '../components/CategoryGrid/CategoryGrid';
 import PixelFooter from '../components/PixelFooter/PixelFooter';
+import RainEffect from '../components/RainEffect/RainEffect';
 import styles from './HomePage.module.css';
 
 export default function HomePage() {
@@ -27,6 +28,7 @@ export default function HomePage() {
         </div>
       </main>
       <PixelFooter />
+      <RainEffect />
 
       {notice.show && (
         <div className={styles.noticeBackdrop} onClick={(e) => { e.stopPropagation(); setNotice({ show: false }); }}>

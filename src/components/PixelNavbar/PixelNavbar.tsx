@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useTheme } from '../../contexts/ThemeContext';
+import { useRain } from '../../contexts/RainContext';
 import { useAuth } from '../../contexts/AuthContext';
 import LoginModal from '../LoginModal/LoginModal';
 import RecentDropdown from '../RecentDropdown/RecentDropdown';
@@ -8,6 +9,7 @@ import styles from './PixelNavbar.module.css';
 
 export default function PixelNavbar() {
   const { theme, toggle } = useTheme();
+  const { raining, toggle: toggleRain } = useRain();
   const { isLoggedIn, logout } = useAuth();
   const [showLogin, setShowLogin] = useState(false);
 
@@ -19,6 +21,13 @@ export default function PixelNavbar() {
       <div className={styles.right}>
         <button className="pixel-button" onClick={toggle} title="toggle theme">
           {theme === 'dark' ? '☀' : '☾'}
+        </button>
+        <button
+          className={raining ? 'pixel-button pixel-button--active' : 'pixel-button'}
+          onClick={toggleRain}
+          title="toggle rain"
+        >
+          💧
         </button>
         <RecentDropdown />
         {isLoggedIn ? (

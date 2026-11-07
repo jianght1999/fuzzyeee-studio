@@ -27,7 +27,7 @@ export default function CategoryCard({ category, onNoticeToggle }: CategoryCardP
     : `${styles.card} pixel-card pixel-card--disabled`;
 
   return (
-    <div className={cardClass} onClick={handleClick}>
+    <div className={cardClass} onClick={handleClick} data-rain-obstacle>
       <div className={styles.imageWrapper}>
         {imgError || !category.image ? (
           <span className={styles.placeholderEmoji}>{category.emoji}</span>
